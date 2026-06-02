@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '../db/client.js'
+import { getRedis, KEYS } from '../lib/redis.js'
 import {
   calcOG, calcFG, calcABV, calcIBU, calcSRM,
   calcStyleMatch, calcProcessAccuracy, calcBalanceScore,
@@ -193,6 +194,21 @@ export async function startBatch(
 
     return newBatch
   })
+
+  // Пишем в Redis маркер с TTL = полная длительность (mashing + boiling + fermenting + conditioning)
+  // Воркер использует его как hint, основной источник — ready_at в БД
+  const totalSeconds =
+    STAGE_DURATION.mashing + STAGE_DURATION.boiling +
+    STAGE_DURATION.fermenting + STAGE_DURATION.conditioning
+  try {
+    await getRedis().set(
+      KEYS.batchReady(batch.id.toString()),
+      JSON.stringify({ batchId: batch.id.toString(), breweryId: breweryId.toString() }),
+      'EX', totalSeconds + 60, // +60с запас
+    )
+  } catch {
+    // Redis недоступен — не блокируем, воркер работает по БД
+  }
 
   return serializeBatch(batch)
 }
