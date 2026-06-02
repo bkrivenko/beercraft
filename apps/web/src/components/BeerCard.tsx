@@ -63,7 +63,7 @@ function Timer({ readyAt, status }: { readyAt: string | null; status: BeerCardPr
   )
 }
 
-export function BeerCard({ id, name, styleName, ibu, abv, quality, srm, status, readyAt, onClick }: BeerCardProps) {
+export function BeerCard({ name, styleName, ibu, abv, quality, srm, status, readyAt, onClick }: BeerCardProps) {
   return (
     <article
       className={`bg-brown-900 rounded-xl overflow-hidden border border-brown-800 shadow-lg
