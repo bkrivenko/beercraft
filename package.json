@@ -1,0 +1,14 @@
+{
+  "name": "beercraft",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,server -c cyan,green \"npm run dev -w apps/web\" \"npm run dev -w apps/server\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
