@@ -46,6 +46,14 @@ export const api = {
       body: JSON.stringify({ accuracy }),
     }),
 
+  // Рынок
+  getMarketOrders: () => request<{ items: MarketOrder[]; total: number }>('/api/v1/market/orders'),
+  getTrends:       () => request<{ items: Trend[] }>('/api/v1/market/trends'),
+  getReadyBatches: () => request<{ items: BatchForSale[]; total: number; reputation: number }>('/api/v1/market/batches'),
+  getSellPrice:    (batchId: string) => request<SellPrice>(`/api/v1/market/sell-price/${batchId}`),
+  sellBatch:       (batchId: string) => request<SellResult>('/api/v1/market/sell', { method: 'POST', body: JSON.stringify({ batchId }) }),
+  fulfillOrder:    (orderId: string, batchId: string) => request<FulfillResult>('/api/v1/market/fulfill', { method: 'POST', body: JSON.stringify({ orderId, batchId }) }),
+
   // Ингредиенты
   getIngredients: () => request<{ items: Ingredient[]; total: number }>('/api/v1/ingredients'),
   getInventory:   () => request<{ items: InventoryItem[]; total: number }>('/api/v1/inventory'),
@@ -109,3 +117,32 @@ export interface StartBatchBody {
 }
 
 export interface StageAccuracy { mash: number; hops: number; chill: number; ferment?: number }
+
+export interface MarketOrder {
+  id: string; customerName: string; styleKey: string | null
+  constraints: Record<string, unknown>; rewardSoft: number; rewardRep: number
+  deadlineAt: string | null; hoursLeft: number | null
+  demandMult: number; trend: 'up' | 'down' | 'neutral'
+}
+
+export interface Trend {
+  styleKey: string; styleName: string; demandMult: number; trend: 'up' | 'down' | 'neutral'
+}
+
+export interface BatchForSale {
+  id: string; styleName: string | null; styleKey: string | null
+  quality: number | null; abv: number | null; ibu: number | null
+  srm: number | null; volumeL: number
+  sellPrice?: number; demandMult?: number; qualityMult?: number; reputationMult?: number
+}
+
+export interface SellPrice {
+  batchId: string; styleName: string | null; quality: number
+  basePrice: number; demandMult: number; reputationMult: number; qualityMult: number; sellPrice: number
+}
+
+export interface SellResult extends SellPrice { remainingCurrency: number }
+export interface FulfillResult {
+  orderId: string; customerName: string; rewardSoft: number; rewardRep: number
+  remainingCurrency: number; reputation: number
+}

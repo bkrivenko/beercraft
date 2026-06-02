@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { HomeScreen } from './screens/HomeScreen'
-import { RecipeConstructor } from './screens/recipe/RecipeConstructor'
+import { HomeScreen }         from './screens/HomeScreen'
+import { RecipeConstructor }  from './screens/recipe/RecipeConstructor'
+import { MarketScreen }       from './screens/MarketScreen'
 import './App.css'
 
-type Screen = 'home' | 'recipe'
+type Screen = 'home' | 'recipe' | 'market'
 
 function App() {
   const [screen, setScreen] = useState<Screen>('home')
@@ -14,14 +15,24 @@ function App() {
         onBack={() => setScreen('home')}
         onSave={() => alert('Рецепт сохранён!')}
         onBrew={(recipe) => {
-          console.log('Brew recipe:', recipe)
-          alert(`Варим! OG будет рассчитана на сервере.`)
+          console.log('Brew recipe (server will calc):', recipe)
+          alert('Варим! Финальный расчёт — на сервере.')
+          setScreen('home')
         }}
       />
     )
   }
 
-  return <HomeScreen onBrew={() => setScreen('recipe')} />
+  if (screen === 'market') {
+    return <MarketScreen onBack={() => setScreen('home')} />
+  }
+
+  return (
+    <HomeScreen
+      onBrew={() => setScreen('recipe')}
+      onMarket={() => setScreen('market')}
+    />
+  )
 }
 
 export default App
