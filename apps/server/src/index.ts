@@ -4,6 +4,7 @@ import { prisma } from './db/client.js'
 import { healthRoutes } from './routes/api/v1/health.js'
 import { meRoutes } from './routes/api/v1/me.js'
 import { ingredientRoutes } from './routes/api/v1/ingredients.js'
+import { batchRoutes } from './routes/api/v1/batches.js'
 
 const app = Fastify({ logger: true })
 
@@ -19,6 +20,7 @@ process.on('SIGTERM', shutdown)
 await app.register(healthRoutes, { prefix: '/api/v1' })
 await app.register(meRoutes, { prefix: '/api/v1' })
 await app.register(ingredientRoutes, { prefix: '/api/v1' })
+await app.register(batchRoutes,     { prefix: '/api/v1' })
 
 const port = Number(process.env.PORT ?? 3000)
 const host = process.env.HOST ?? '0.0.0.0'
