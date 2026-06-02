@@ -129,13 +129,23 @@ export async function startBatch(
     inventoryItems.map((i: any) => [i.ingredient.key, Number(i.quantity)]),
   )
 
-  // Хмель — граммы, ингредиент хранится в 100г или кг
-  // Пока упрощённо: проверяем что хоть что-то есть
+  // Проверяем солод (кг)
   for (const m of malts) {
     const stock = stockByKey[m.key] ?? 0
     if (stock < m.amountKg) {
       throw new BatchError(
         `Недостаточно ${m.key} на складе: нужно ${m.amountKg} кг, есть ${stock} кг`,
+        'INSUFFICIENT_STOCK',
+      )
+    }
+  }
+  // Проверяем хмель (граммы; в инвентаре хранится в 100г-единицах → конвертируем)
+  for (const h of hops) {
+    const stockUnits = stockByKey[h.key] ?? 0   // единицы (100г)
+    const stockG     = stockUnits * 100
+    if (stockG < h.amountG) {
+      throw new BatchError(
+        `Недостаточно ${h.key} на складе: нужно ${h.amountG} г, есть ${stockG} г`,
         'INSUFFICIENT_STOCK',
       )
     }
@@ -256,9 +266,13 @@ export async function completeStage(
   const nextStatus = batch.status === 'mashing' ? 'boiling' : 'fermenting'
 
   // При переходе в fermenting — считаем финальные параметры
+  // ready_at для промежуточного перехода (mashing→boiling = 5 мин);
+  // для boiling→fermenting переписывается ниже на реальную длительность брожения
   let updateData: Record<string, unknown> = {
     status:   nextStatus,
-    ready_at: new Date(now.getTime() + STAGE_DURATION[nextStatus as keyof typeof STAGE_DURATION] * 1000),
+    ready_at: nextStatus === 'boiling'
+      ? new Date(now.getTime() + STAGE_DURATION.boiling * 1000)
+      : null,
     accuracy: safeAcc,
   }
 
@@ -341,8 +355,7 @@ export async function completeStage(
       quality,
       profile:     { gp, bugu: gp > 0 ? Math.round((ibu / gp) * 100) / 100 : 0 },
       accuracy:    safeAcc,
-      // После брожения → conditioning
-      ready_at:    new Date(now.getTime() + STAGE_DURATION.fermenting * 1000),
+      ready_at:    new Date(now.getTime() + STAGE_DURATION.fermenting * 1000), // 4ч брожение
     }
 
     // Начисляем XP + проверяем левел-ап

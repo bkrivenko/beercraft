@@ -14,6 +14,7 @@ import { notifyBatchReady } from './bot.js'
 const POLL_INTERVAL_MS = 60_000  // проверяем раз в минуту
 
 let workerTimer: ReturnType<typeof setInterval> | null = null
+let running = false   // защита от параллельных циклов
 
 export function startNotificationWorker() {
   if (workerTimer) return  // уже запущен
@@ -22,7 +23,7 @@ export function startNotificationWorker() {
 
   // Первый прогон сразу
   void runWorkerCycle()
-  workerTimer = setInterval(runWorkerCycle, POLL_INTERVAL_MS)
+  workerTimer = setInterval(() => { void runWorkerCycle() }, POLL_INTERVAL_MS)
 }
 
 export function stopNotificationWorker() {
@@ -34,6 +35,8 @@ export function stopNotificationWorker() {
 }
 
 async function runWorkerCycle() {
+  if (running) return   // предыдущий цикл ещё не завершился
+  running = true
   try {
     const now = new Date()
 
@@ -105,5 +108,7 @@ async function runWorkerCycle() {
     }
   } catch (err) {
     console.error('[worker] cycle error:', (err as Error).message)
+  } finally {
+    running = false
   }
 }

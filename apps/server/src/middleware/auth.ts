@@ -67,6 +67,6 @@ export async function authMiddleware(
   try {
     request.telegramUser = validateInitData(initData, botToken)
   } catch {
-    reply.code(401).send({ error: 'Invalid Telegram initData' })
+    return reply.code(401).send({ error: 'Invalid Telegram initData' })
   }
 }
