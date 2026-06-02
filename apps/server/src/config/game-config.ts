@@ -1,68 +1,101 @@
 // Все игровые коэффициенты — только здесь. Не хардкодить в логике.
 
 export const GAME_CONFIG = {
+  // ── Затирание (B.1, B.2) ──────────────────────────────────────────────────
   mash: {
-    effDefault: 0.8,
-    tempFactor: {
-      '63-64': 1.05,
-      '65-67': 1.0,
-      '68-70': 0.93,
-    },
+    effDefault: 0.80,
+    // Влияние температуры затирания на эффективную аттенюацию (B.2)
+    // ключ — нижняя граница диапазона °C
+    tempFactor: [
+      { min: 63, max: 64, factor: 1.05 },
+      { min: 65, max: 67, factor: 1.00 },
+      { min: 68, max: 70, factor: 0.93 },
+    ] as Array<{ min: number; max: number; factor: number }>,
+    tempFactorDefault: 1.00,
+    effAttMin: 0.50,
+    effAttMax: 0.92,
   },
 
+  // ── Хмель (B.4) ───────────────────────────────────────────────────────────
   hops: {
+    // Утилизация по тайм-слоту
     utilization: {
-      bittering_60min: 0.21,
-      flavor_15min: 0.12,
-      aroma_5min: 0.05,
-      dry_hop: 0.0,
-    },
+      bittering: 0.21,  // 60 мин
+      flavor:    0.12,  // 15–20 мин
+      aroma:     0.05,  // 1–5 мин / flameout
+      dry_hop:   0.00,  // только аромат
+    } as Record<string, number>,
+    // Tinseth bigness factor: 1.65 * 0.000125^(OG-1)
+    tinsethA: 1.65,
+    tinsethB: 0.000125,
   },
 
+  // ── Варка (B.1, B.3, B.5) ────────────────────────────────────────────────
   brew: {
-    srmK: 5.0,
-    srmExp: 0.69,
-    abvFactor: 131.25,
-    // "1.65 * 0.000125^(OG-1)" — аппроксимация для FG
+    abvFactor: 131.25,       // B.3
+    srmK:      5.0,          // B.5 Morey коэффициент
+    srmExp:    0.69,         // B.5 Morey показатель
   },
 
+  // ── Точность процесса (B.7) ───────────────────────────────────────────────
   process: {
     weights: {
-      mash: 0.3,
-      hops: 0.3,
-      chill: 0.15,
+      mash:    0.30,
+      hops:    0.30,
+      chill:   0.15,
       ferment: 0.25,
     },
   },
 
-  quality: {
-    weights: {
-      stylMatch: 0.5,
-      process: 0.3,
-      balance: 0.2,
+  // ── StyleMatch (B.8) ─────────────────────────────────────────────────────
+  styleMatch: {
+    // Веса параметров стиля
+    paramWeights: {
+      abv:     0.25,
+      ibu:     0.25,
+      srm:     0.15,
+      fg:      0.15,   // тело
+      profile: 0.20,   // ключевые теги вкуса
     },
-    bonusWater: 2,
-    kOff: 8,
-    kBal: 30,
-    kOut: 40,
-    bonusCenter: 10,
-    randomR0: 6,
+    kOut:        40,   // штраф за выход за границу диапазона
+    bonusCenter: 10,   // бонус за попадание в центр диапазона
   },
 
+  // ── Баланс BU:GU (B.9) ───────────────────────────────────────────────────
+  balance: {
+    kBal: 30,          // штраф отклонения от BUGU_target
+  },
+
+  // ── Итоговое качество (B.10) ──────────────────────────────────────────────
+  quality: {
+    weights: {
+      styleMatch: 0.50,
+      process:    0.30,
+      balance:    0.20,
+    },
+    bonusWater: 2,     // профиль воды совпадает со стилем
+    kOff:       8,     // штраф офф-флейворов за ед. промаха
+    randomR0:   6,     // базовый разброс «удачи» (±R0)
+  },
+
+  // ── Цена продажи (B.11) ───────────────────────────────────────────────────
   price: {
-    // итоговая цена = base * qualityMult * demandMult * reputationMult
     qualityMultMin: 0.5,
     qualityMultMax: 2.0, // 0.5 + quality/100 * 1.5
-    demandMultRange: [0.7, 1.5] as [number, number],
+    demandMultRange:     [0.7, 1.5] as [number, number],
     reputationMultRange: [1.0, 1.3] as [number, number],
   },
 
+  // ── Опыт и прогрессия (B.12) ──────────────────────────────────────────────
   xp: {
-    perBrewFormula: 'round(quality*0.5 + volume_l*0.5 + new_style_bonus)',
+    cQ:           0.5,   // множитель качества
+    cV:           0.5,   // множитель объёма
     newStyleBonus: 10,
+    baseXp:        100,
     toLevel: (level: number) => Math.round(100 * Math.pow(level, 1.5)),
   },
 
+  // ── Рейтинг ───────────────────────────────────────────────────────────────
   rating: {
     initialElo: 1000,
   },
