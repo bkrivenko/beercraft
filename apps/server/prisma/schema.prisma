@@ -4,5 +4,435 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+// ---------- ENUM-типы ----------
+
+enum CurrencyKind {
+  soft
+  premium
+  reputation
+}
+
+enum IngredientType {
+  malt
+  hop
+  yeast
+  water
+  adjunct
+}
+
+enum BatchStatus {
+  mashing
+  boiling
+  fermenting
+  conditioning
+  ready
+  sold
+  discarded
+}
+
+enum OrderStatus {
+  open
+  fulfilled
+  expired
+  cancelled
+}
+
+enum MatchMode {
+  duel
+  festival
+  coop
+}
+
+enum MatchStatus {
+  lobby
+  in_progress
+  finished
+  cancelled
+}
+
+enum ParticipantResult {
+  pending
+  win
+  loss
+  draw
+}
+
+enum BreweryRole {
+  owner
+  brewer
+  buyer
+  seller
+  member
+}
+
+enum TxnType {
+  sale
+  order_reward
+  purchase_ingredient
+  purchase_equipment
+  match_reward
+  season_reward
+  refund
+  adjustment
+}
+
+enum StoreKind {
+  ingredient
+  equipment
+  cosmetic
+  fermenter_slot
+  pass
+}
+
+// ---------- Пользователи ----------
+
+model User {
+  id               BigInt    @id @default(autoincrement())
+  telegram_id      BigInt    @unique
+  username         String?
+  display_name     String?
+  level            Int       @default(1)
+  xp               Int       @default(0)
+  soft_currency    Int       @default(0)
+  premium_currency Int       @default(0)
+  reputation       Int       @default(0)
+  locale           String    @default("ru")
+  age_confirmed    Boolean   @default(false)
+  created_at       DateTime  @default(now()) @db.Timestamptz()
+  last_seen_at     DateTime? @db.Timestamptz()
+
+  brewery          Brewery?
+  breweryMembers   BreweryMember[]
+  recipes          Recipe[]
+  matchParticipants MatchParticipant[]
+  ratings          Rating[]
+  transactions     Transaction[]
+  wonMatches       Match[]            @relation("MatchWinner")
+  beerStyles       BeerStyle[]        @relation("StyleAuthor")
+  userAchievements UserAchievement[]
+
+  @@map("users")
+}
+
+// ---------- Пивоварни ----------
+
+model Brewery {
+  id         BigInt   @id @default(autoincrement())
+  owner_id   BigInt   @unique
+  name       String   @default("Моя пивоварня")
+  treasury   Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  owner      User            @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  members    BreweryMember[]
+  equipment  Equipment[]
+  inventory  Inventory[]
+  batches    Batch[]
+  marketOrders MarketOrder[]
+
+  @@map("breweries")
+}
+
+model BreweryMember {
+  brewery_id BigInt
+  user_id    BigInt
+  role       BreweryRole @default(member)
+  joined_at  DateTime    @default(now()) @db.Timestamptz()
+
+  brewery    Brewery @relation(fields: [brewery_id], references: [id], onDelete: Cascade)
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([brewery_id, user_id])
+  @@map("brewery_members")
+}
+
+// ---------- Оборудование ----------
+
+model Equipment {
+  id          BigInt   @id @default(autoincrement())
+  brewery_id  BigInt
+  type        String
+  level       Int      @default(1)
+  params      Json     @default("{}")
+  acquired_at DateTime @default(now()) @db.Timestamptz()
+
+  brewery     Brewery @relation(fields: [brewery_id], references: [id], onDelete: Cascade)
+
+  @@index([brewery_id])
+  @@map("equipment")
+}
+
+// ---------- Справочник ингредиентов ----------
+
+model Ingredient {
+  id           BigInt         @id @default(autoincrement())
+  key          String         @unique
+  type         IngredientType
+  name         String
+  params       Json           @default("{}")
+  base_price   Int            @default(0)
+  unit         String         @default("kg")
+  unlock_level Int            @default(1)
+
+  inventory    Inventory[]
+
+  @@index([type])
+  @@map("ingredients")
+}
+
+// ---------- Инвентарь ----------
+
+model Inventory {
+  brewery_id    BigInt
+  ingredient_id BigInt
+  quantity      Decimal @default(0) @db.Decimal(10, 3)
+
+  brewery       Brewery    @relation(fields: [brewery_id], references: [id], onDelete: Cascade)
+  ingredient    Ingredient @relation(fields: [ingredient_id], references: [id], onDelete: Restrict)
+
+  @@id([brewery_id, ingredient_id])
+  @@map("inventory")
+}
+
+// ---------- Стили ----------
+
+model BeerStyle {
+  id           BigInt   @id @default(autoincrement())
+  key          String?  @unique
+  name         String
+  family       String?
+  og_min       Decimal? @db.Decimal(5, 3)
+  og_max       Decimal? @db.Decimal(5, 3)
+  fg_min       Decimal? @db.Decimal(5, 3)
+  fg_max       Decimal? @db.Decimal(5, 3)
+  abv_min      Decimal? @db.Decimal(4, 2)
+  abv_max      Decimal? @db.Decimal(4, 2)
+  ibu_min      Int?
+  ibu_max      Int?
+  srm_min      Decimal? @db.Decimal(4, 1)
+  srm_max      Decimal? @db.Decimal(4, 1)
+  bugu_min     Decimal? @db.Decimal(4, 2)
+  bugu_max     Decimal? @db.Decimal(4, 2)
+  profile      Json     @default("{}")
+  base_price   Int      @default(90)
+  difficulty   Int      @default(1) @db.SmallInt
+  unlock_level Int      @default(1)
+  description  String?
+  is_custom    Boolean  @default(false)
+  author_id    BigInt?
+  is_public    Boolean  @default(false)
+  created_at   DateTime @default(now()) @db.Timestamptz()
+
+  author       User?   @relation("StyleAuthor", fields: [author_id], references: [id], onDelete: SetNull)
+  recipes      Recipe[]
+  batches      Batch[]
+
+  @@index([is_custom, is_public])
+  @@map("beer_styles")
+}
+
+// ---------- Рецепты ----------
+
+model Recipe {
+  id              BigInt   @id @default(autoincrement())
+  author_id       BigInt
+  name            String
+  target_style_id BigInt?
+  version         Int      @default(1)
+  malt_bill       Json     @default("[]")
+  hop_schedule    Json     @default("[]")
+  yeast_key       String?
+  water_key       String?
+  adjuncts        Json     @default("[]")
+  process         Json     @default("{}")
+  notes           String?
+  is_public       Boolean  @default(false)
+  created_at      DateTime @default(now()) @db.Timestamptz()
+
+  author          User       @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  targetStyle     BeerStyle? @relation(fields: [target_style_id], references: [id], onDelete: SetNull)
+  batches         Batch[]
+
+  @@unique([author_id, name, version])
+  @@index([author_id])
+  @@map("recipes")
+}
+
+// ---------- Партии ----------
+
+model Batch {
+  id         BigInt      @id @default(autoincrement())
+  brewery_id BigInt
+  recipe_id  BigInt?
+  style_id   BigInt?
+  volume_l   Decimal     @db.Decimal(6, 1)
+  status     BatchStatus @default(mashing)
+  started_at DateTime    @default(now()) @db.Timestamptz()
+  ready_at   DateTime?   @db.Timestamptz()
+  og         Decimal?    @db.Decimal(5, 3)
+  fg         Decimal?    @db.Decimal(5, 3)
+  abv        Decimal?    @db.Decimal(4, 2)
+  ibu        Int?
+  srm        Decimal?    @db.Decimal(4, 1)
+  profile    Json        @default("{}")
+  accuracy   Json        @default("{}")
+  style_match Int?
+  quality    Int?
+  match_id   BigInt?
+  created_at DateTime    @default(now()) @db.Timestamptz()
+
+  brewery    Brewery    @relation(fields: [brewery_id], references: [id], onDelete: Cascade)
+  recipe     Recipe?    @relation(fields: [recipe_id], references: [id], onDelete: SetNull)
+  style      BeerStyle? @relation(fields: [style_id], references: [id], onDelete: SetNull)
+  match      Match?     @relation(fields: [match_id], references: [id], onDelete: SetNull)
+  matchParticipants MatchParticipant[]
+  fulfilledOrders   MarketOrder[]
+
+  @@index([brewery_id, status])
+  @@map("batches")
+}
+
+// ---------- Заказы рынка ----------
+
+model MarketOrder {
+  id                 BigInt      @id @default(autoincrement())
+  brewery_id         BigInt?
+  customer_name      String
+  required_style_key String?
+  constraints        Json        @default("{}")
+  reward_soft        Int         @default(0)
+  reward_reputation  Int         @default(0)
+  deadline_at        DateTime?   @db.Timestamptz()
+  status             OrderStatus @default(open)
+  fulfilled_batch_id BigInt?
+  created_at         DateTime    @default(now()) @db.Timestamptz()
+
+  brewery            Brewery? @relation(fields: [brewery_id], references: [id], onDelete: Cascade)
+  fulfilledBatch     Batch?   @relation(fields: [fulfilled_batch_id], references: [id], onDelete: SetNull)
+
+  @@index([brewery_id, status])
+  @@map("market_orders")
+}
+
+// ---------- Мультиплеер: матчи ----------
+
+model Match {
+  id          BigInt      @id @default(autoincrement())
+  mode        MatchMode
+  seed        BigInt
+  task        Json        @default("{}")
+  status      MatchStatus @default(lobby)
+  winner_id   BigInt?
+  created_at  DateTime    @default(now()) @db.Timestamptz()
+  finished_at DateTime?   @db.Timestamptz()
+
+  winner       User?             @relation("MatchWinner", fields: [winner_id], references: [id], onDelete: SetNull)
+  participants MatchParticipant[]
+  batches      Batch[]
+
+  @@map("matches")
+}
+
+model MatchParticipant {
+  match_id BigInt
+  user_id  BigInt
+  batch_id BigInt?
+  score    Int?
+  result   ParticipantResult @default(pending)
+  is_ready Boolean           @default(false)
+
+  match    Match  @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  batch    Batch? @relation(fields: [batch_id], references: [id], onDelete: SetNull)
+
+  @@id([match_id, user_id])
+  @@map("match_participants")
+}
+
+// ---------- Рейтинг / сезоны ----------
+
+model RatingSeason {
+  id        BigInt   @id @default(autoincrement())
+  name      String
+  starts_at DateTime @db.Timestamptz()
+  ends_at   DateTime @db.Timestamptz()
+
+  ratings   Rating[]
+
+  @@map("rating_seasons")
+}
+
+model Rating {
+  season_id BigInt
+  user_id   BigInt
+  rating    Int    @default(1000)
+  wins      Int    @default(0)
+  losses    Int    @default(0)
+
+  season    RatingSeason @relation(fields: [season_id], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([season_id, user_id])
+  @@map("ratings")
+}
+
+// ---------- Транзакции ----------
+
+model Transaction {
+  id         BigInt       @id @default(autoincrement())
+  user_id    BigInt
+  type       TxnType
+  currency   CurrencyKind
+  amount     Int
+  reason     String?
+  ref_id     BigInt?
+  created_at DateTime     @default(now()) @db.Timestamptz()
+
+  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, created_at])
+  @@map("transactions")
+}
+
+// ---------- Каталог магазина ----------
+
+model StoreCatalog {
+  id             BigInt       @id @default(autoincrement())
+  kind           StoreKind
+  ref_key        String
+  title          String
+  price_currency CurrencyKind @default(soft)
+  price_amount   Int
+  enabled        Boolean      @default(true)
+  feature_flag   String?
+  unlock_level   Int          @default(1)
+
+  @@map("store_catalog")
+}
+
+// ---------- Достижения ----------
+
+model Achievement {
+  id          BigInt  @id @default(autoincrement())
+  key         String  @unique
+  title       String
+  description String?
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  user_id        BigInt
+  achievement_id BigInt
+  unlocked_at    DateTime @default(now()) @db.Timestamptz()
+
+  user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  achievement    Achievement @relation(fields: [achievement_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, achievement_id])
+  @@map("user_achievements")
 }
