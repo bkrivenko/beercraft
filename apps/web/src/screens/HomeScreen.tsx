@@ -8,7 +8,7 @@ const MOCK_BATCHES = [
   { id: 3, name: 'Хмельной IPA',  style: 'West Coast IPA', ibu: 65, abv: 6.8, quality: 94, status: 'conditioning' as const },
 ]
 
-export function HomeScreen() {
+export function HomeScreen({ onBrew }: { onBrew?: () => void }) {
   const { displayName } = useTelegram()
 
   return (
@@ -52,6 +52,16 @@ export function HomeScreen() {
           ))}
         </div>
       </section>
+
+      {/* CTA */}
+      <div className="px-4 pt-4">
+        <button
+          className="w-full bg-amber-600 text-brown-950 font-bold py-3 rounded-xl active:opacity-80"
+          onClick={onBrew}
+        >
+          🍺 Сварить партию
+        </button>
+      </div>
     </div>
   )
 }
