@@ -8,9 +8,10 @@ import { getRedis, KEYS } from '../lib/redis.js'
 import {
   calcOG, calcFG, calcABV, calcIBU, calcSRM,
   calcStyleMatch, calcProcessAccuracy, calcBalanceScore,
-  calcQuality, calcSellPrice, calcBrewXP,
+  calcQuality, calcBrewXP,
   type MaltInput, type HopInput, type ProcessAccuracy, type StyleRange,
 } from '../game/calculations.js'
+import { computeXpGain } from '../game/progression.js'
 
 // ── Длительности этапов (секунды) ────────────────────────────────────────────
 // В реальной игре зависят от оборудования; здесь — базовые значения
@@ -344,7 +345,7 @@ export async function completeStage(
       ready_at:    new Date(now.getTime() + STAGE_DURATION.fermenting * 1000),
     }
 
-    // Начисляем XP игроку
+    // Начисляем XP + проверяем левел-ап
     const user = await prisma.user.findUnique({
       where: { brewery: { id: breweryId } },
       select: { id: true, xp: true, level: true },
@@ -352,10 +353,25 @@ export async function completeStage(
 
     if (user) {
       const xpGain = calcBrewXP(quality, volumeL, false)
+      const xpResult = computeXpGain(user.xp, user.level, xpGain)
+
       await prisma.user.update({
         where: { id: user.id },
-        data: { xp: { increment: xpGain } },
+        data: {
+          xp:    xpResult.newXp,
+          level: xpResult.newLevel,
+          // Бонусные монеты при левел-апе
+          ...(xpResult.leveledUp && { soft_currency: { increment: xpResult.levelsGained * 50 } }),
+        },
       })
+
+      // Логируем левел-апы (для уведомлений в будущем)
+      if (xpResult.leveledUp) {
+        console.log(
+          `[progression] user ${user.id} leveled up: ${user.level} → ${xpResult.newLevel}`,
+          'unlocks:', xpResult.unlocks.map((u) => `L${u.level}`).join(', '),
+        )
+      }
     }
   }
 

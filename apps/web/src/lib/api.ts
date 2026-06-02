@@ -46,6 +46,9 @@ export const api = {
       body: JSON.stringify({ accuracy }),
     }),
 
+  // Профиль / прогрессия
+  getStats: () => request<PlayerStats>('/api/v1/me/stats'),
+
   // Рынок
   getMarketOrders: () => request<{ items: MarketOrder[]; total: number }>('/api/v1/market/orders'),
   getTrends:       () => request<{ items: Trend[] }>('/api/v1/market/trends'),
@@ -142,6 +145,20 @@ export interface SellPrice {
 }
 
 export interface SellResult extends SellPrice { remainingCurrency: number }
+export interface Progression {
+  level: number; xp: number; xpToNext: number; xpProgress: number
+  nextUnlocks?: { level: number; styles: string[]; ingredients: string[]; equipment: string[] }
+}
+
+export interface PlayerStats {
+  displayName: string; level: number; xp: number
+  softCurrency: number; reputation: number; createdAt: string; breweryName: string | null
+  progression: Progression
+  stats: { brewsTotal: number; soldBatches: number; avgQuality: number | null; totalIncome: number }
+  topBatches: Array<{ quality: number; styleName: string; abv: number | null; ibu: number | null }>
+  nextLevelUnlocks?: { level: number; styles: string[]; ingredients: string[]; equipment: string[] }
+}
+
 export interface FulfillResult {
   orderId: string; customerName: string; rewardSoft: number; rewardRep: number
   remainingCurrency: number; reputation: number

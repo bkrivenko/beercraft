@@ -1,38 +1,69 @@
 import { useState } from 'react'
-import { HomeScreen }         from './screens/HomeScreen'
-import { RecipeConstructor }  from './screens/recipe/RecipeConstructor'
-import { MarketScreen }       from './screens/MarketScreen'
+import { HomeScreen }        from './screens/HomeScreen'
+import { RecipeConstructor } from './screens/recipe/RecipeConstructor'
+import { MarketScreen }      from './screens/MarketScreen'
+import { ProfileScreen }     from './screens/ProfileScreen'
 import './App.css'
 
-type Screen = 'home' | 'recipe' | 'market'
+type Screen = 'home' | 'recipe' | 'market' | 'profile'
 
-function App() {
-  const [screen, setScreen] = useState<Screen>('home')
+// ── Bottom Navigation ─────────────────────────────────────────────────────────
+const NAV_ITEMS: Array<{ key: Screen; icon: string; label: string }> = [
+  { key: 'home',    icon: '🍺', label: 'Пивоварня' },
+  { key: 'market',  icon: '💰', label: 'Рынок'     },
+  { key: 'profile', icon: '👤', label: 'Профиль'   },
+]
 
-  if (screen === 'recipe') {
-    return (
-      <RecipeConstructor
-        onBack={() => setScreen('home')}
-        onSave={() => alert('Рецепт сохранён!')}
-        onBrew={(recipe) => {
-          console.log('Brew recipe (server will calc):', recipe)
-          alert('Варим! Финальный расчёт — на сервере.')
-          setScreen('home')
-        }}
-      />
-    )
-  }
-
-  if (screen === 'market') {
-    return <MarketScreen onBack={() => setScreen('home')} />
-  }
-
+function BottomNav({ current, onChange }: { current: Screen; onChange: (s: Screen) => void }) {
+  const activeKey = current === 'recipe' ? 'home' : current
   return (
-    <HomeScreen
-      onBrew={() => setScreen('recipe')}
-      onMarket={() => setScreen('market')}
-    />
+    <nav className="fixed bottom-0 left-0 right-0 bg-brown-900 border-t border-brown-800 flex z-30">
+      {NAV_ITEMS.map(({ key, icon, label }) => (
+        <button
+          key={key}
+          className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-colors ${
+            activeKey === key
+              ? 'text-amber-600 font-semibold'
+              : 'text-cream-200 opacity-50 active:opacity-80'
+          }`}
+          onClick={() => onChange(key)}
+        >
+          <span className="text-xl leading-none mb-0.5">{icon}</span>
+          {label}
+        </button>
+      ))}
+    </nav>
   )
 }
 
-export default App
+// ── App ───────────────────────────────────────────────────────────────────────
+export default function App() {
+  const [screen, setScreen] = useState<Screen>('home')
+
+  const showNav = screen !== 'recipe'
+
+  return (
+    <div className="pb-16">   {/* отступ под BottomNav */}
+      {screen === 'home' && (
+        <HomeScreen
+          onBrew={() => setScreen('recipe')}
+          onMarket={() => setScreen('market')}
+        />
+      )}
+      {screen === 'recipe' && (
+        <RecipeConstructor
+          onBack={() => setScreen('home')}
+          onSave={() => { alert('Рецепт сохранён!'); setScreen('home') }}
+          onBrew={(recipe) => {
+            console.log('Brew recipe:', recipe)
+            setScreen('home')
+          }}
+        />
+      )}
+      {screen === 'market'  && <MarketScreen  onBack={() => setScreen('home')} />}
+      {screen === 'profile' && <ProfileScreen onBack={() => setScreen('home')} />}
+
+      {showNav && <BottomNav current={screen} onChange={setScreen} />}
+    </div>
+  )
+}
