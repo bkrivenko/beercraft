@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+@theme {
+  /* ── BeerCraft colour palette ── */
+
+  /* Тёмно-коричневый — фон, шапка */
+  --color-brown-950: #3B1F0A;
+  --color-brown-900: #4e2a0e;
+  --color-brown-800: #6b3a14;
+  --color-brown-700: #87491a;
+
+  /* Янтарный — акцент, кнопки, иконки */
+  --color-amber-600: #C8860A;
+  --color-amber-500: #e09a10;
+  --color-amber-400: #f0b030;
+  --color-amber-300: #f5c84a;
+
+  /* Кремовый — текст на тёмном, карточки */
+  --color-cream-100: #F5E6C8;
+  --color-cream-200: #edd9a8;
+  --color-cream-300: #e4cc88;
+
+  /* Зелёный хмель — статусы, теги, индикаторы */
+  --color-hop-900: #1C3A1E;
+  --color-hop-800: #254e28;
+  --color-hop-700: #2e6232;
+  --color-hop-600: #3a7a3e;
+  --color-hop-400: #5aaa5e;
+}
