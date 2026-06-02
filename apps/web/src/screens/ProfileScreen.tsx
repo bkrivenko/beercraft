@@ -121,7 +121,18 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
   useEffect(() => {
     api.getStats()
       .then(setStats)
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        // 404 означает что пользователь ещё не создан (нет инициализации через /me)
+        // или сервер недоступен — показываем понятное сообщение
+        const msg = e instanceof Error ? e.message : 'Ошибка'
+        if (msg.includes('404') || msg.includes('not found')) {
+          setError('Профиль не найден. Сначала зайдите на главный экран чтобы создать аккаунт.')
+        } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+          setError('Нет соединения с сервером. Проверьте интернет-подключение.')
+        } else {
+          setError(msg)
+        }
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -135,7 +146,7 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5 pb-10">
+      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5 pb-20">
 
         {loading ? (
           <div className="space-y-4">
@@ -146,8 +157,13 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
             </div>
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="flex flex-col items-center py-12 space-y-4 px-4 text-center">
+            <span className="text-4xl">😕</span>
+            <p className="text-cream-200 text-sm">{error}</p>
+            <button
+              className="border border-brown-700 text-cream-100 text-sm px-5 py-2.5 rounded-xl active:opacity-70"
+              onClick={onBack}
+            >← На главную</button>
           </div>
         ) : stats ? (
           <>

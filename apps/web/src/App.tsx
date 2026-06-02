@@ -48,6 +48,7 @@ export default function App() {
         <HomeScreen
           onBrew={() => setScreen('recipe')}
           onMarket={() => setScreen('market')}
+          onProfile={() => setScreen('profile')}
         />
       )}
       {screen === 'recipe' && (

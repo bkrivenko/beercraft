@@ -48,7 +48,7 @@ function EmptyBatches({ onBrew }: { onBrew?: () => void }) {
 }
 
 // ── Главный экран ─────────────────────────────────────────────────────────────
-export function HomeScreen({ onBrew, onMarket }: { onBrew?: () => void; onMarket?: () => void }) {
+export function HomeScreen({ onBrew, onMarket, onProfile }: { onBrew?: () => void; onMarket?: () => void; onProfile?: () => void }) {
   const { displayName } = useTelegram()
   const { profile, loading: profileLoading } = useProfile()
   const { batches, loading: batchesLoading } = useBatches(10_000)
@@ -57,7 +57,7 @@ export function HomeScreen({ onBrew, onMarket }: { onBrew?: () => void; onMarket
   const activeBatches = batches.filter((b) => b.status !== 'ready' && b.status !== 'sold')
 
   return (
-    <div className="min-h-screen bg-brown-950 pb-24">
+    <div className="min-h-screen bg-brown-950 pb-40">
 
       {/* Шапка */}
       <header className="bg-brown-900 border-b border-brown-800 px-4 py-4">
@@ -70,7 +70,7 @@ export function HomeScreen({ onBrew, onMarket }: { onBrew?: () => void; onMarket
               {displayName} 👋
             </h1>
           </div>
-          <button className="text-cream-200 text-xl opacity-60 active:opacity-100">⚙</button>
+          <button className="text-cream-200 text-xl opacity-60 active:opacity-100" onClick={onProfile}>⚙</button>
         </div>
 
         {/* Статы */}
@@ -160,16 +160,16 @@ export function HomeScreen({ onBrew, onMarket }: { onBrew?: () => void; onMarket
         </div>
       </section>
 
-      {/* Кнопка варить */}
-      <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-3 bg-gradient-to-t from-brown-950 to-transparent space-y-2">
+      {/* Кнопки — над BottomNav (bottom-16 = 64px высота нав-бара) */}
+      <div className="fixed bottom-16 left-0 right-0 px-4 pb-3 pt-4 bg-gradient-to-t from-brown-950 via-brown-950/90 to-transparent space-y-2 pointer-events-none">
         <button
-          className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80"
+          className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80 pointer-events-auto"
           onClick={onBrew}
         >
           🍺 Сварить партию
         </button>
         <button
-          className="w-full border border-brown-700 text-cream-100 font-bold py-3 rounded-2xl text-sm active:opacity-70"
+          className="w-full border border-brown-700 text-cream-100 font-bold py-3 rounded-2xl text-sm active:opacity-70 pointer-events-auto"
           onClick={onMarket}
         >
           💰 Рынок и продажа
