@@ -1,0 +1,2145 @@
+{
+  "meta": {
+    "name": "BeerCraft",
+    "content_version": "1.0",
+    "sources": "Style stats per BJCP 2021; hop alpha & yeast attenuation are typical published ranges.",
+    "note": "Все коэффициенты — стартовый баланс, подбираются по метрикам."
+  },
+  "config": {
+    "ppkg_note": "gravity points per kg per liter; per-malt values in ingredients",
+    "mash_eff_default": 0.8,
+    "mash_temp_factor": {
+      "63-64": 1.05,
+      "65-67": 1.0,
+      "68-70": 0.93
+    },
+    "hop_utilization": {
+      "bittering_60min": 0.21,
+      "flavor_15min": 0.12,
+      "aroma_5min": 0.05,
+      "dry_hop": 0.0
+    },
+    "gravity_factor_approx": "1.65 * 0.000125^(OG-1)",
+    "srm_k": 5.0,
+    "srm_exp": 0.69,
+    "abv_factor": 131.25,
+    "process_weights": {
+      "mash": 0.3,
+      "hops": 0.3,
+      "chill": 0.15,
+      "ferment": 0.25
+    },
+    "quality_weights": {
+      "style_match": 0.5,
+      "process": 0.3,
+      "balance": 0.2
+    },
+    "bonus_water": 2,
+    "k_off": 8,
+    "k_bal": 30,
+    "k_out": 40,
+    "bonus_center": 10,
+    "random_R0": 6,
+    "price": {
+      "qualityMult": "0.5 + Quality/100*1.5",
+      "demandMult_range": [
+        0.7,
+        1.5
+      ],
+      "reputationMult_range": [
+        1.0,
+        1.3
+      ]
+    },
+    "xp": {
+      "per_brew": "round(quality*0.5 + volume_l*0.5 + new_style_bonus)",
+      "new_style_bonus": 10,
+      "to_level": "round(100 * L^1.5)"
+    }
+  },
+  "ingredients": [
+    {
+      "key": "pale_2row",
+      "type": "malt",
+      "name": "Pale Ale (2-row)",
+      "params": {
+        "ppkg": 305,
+        "color_l": 2,
+        "profile": "хлебный, бисквитный"
+      },
+      "base_price": 6,
+      "unit": "kg",
+      "unlock_level": 1
+    },
+    {
+      "key": "crystal40",
+      "type": "malt",
+      "name": "Caramel/Crystal 40",
+      "params": {
+        "ppkg": 260,
+        "color_l": 40,
+        "profile": "карамель, лёгкая сладость"
+      },
+      "base_price": 11,
+      "unit": "kg",
+      "unlock_level": 1
+    },
+    {
+      "key": "pilsner",
+      "type": "malt",
+      "name": "Pilsner",
+      "params": {
+        "ppkg": 310,
+        "color_l": 1.5,
+        "profile": "чистый, зерновой"
+      },
+      "base_price": 6,
+      "unit": "kg",
+      "unlock_level": 2
+    },
+    {
+      "key": "wheat",
+      "type": "malt",
+      "name": "Wheat (солодовая пшеница)",
+      "params": {
+        "ppkg": 300,
+        "color_l": 2,
+        "profile": "мягкий, пшеничный"
+      },
+      "base_price": 7,
+      "unit": "kg",
+      "unlock_level": 2
+    },
+    {
+      "key": "munich",
+      "type": "malt",
+      "name": "Munich",
+      "params": {
+        "ppkg": 290,
+        "color_l": 9,
+        "profile": "насыщенный солодовый"
+      },
+      "base_price": 9,
+      "unit": "kg",
+      "unlock_level": 5
+    },
+    {
+      "key": "crystal60",
+      "type": "malt",
+      "name": "Caramel/Crystal 60",
+      "params": {
+        "ppkg": 255,
+        "color_l": 60,
+        "profile": "тёмная карамель, тоффи"
+      },
+      "base_price": 11,
+      "unit": "kg",
+      "unlock_level": 5
+    },
+    {
+      "key": "chocolate",
+      "type": "malt",
+      "name": "Chocolate malt",
+      "params": {
+        "ppkg": 250,
+        "color_l": 350,
+        "profile": "шоколад, кофе"
+      },
+      "base_price": 14,
+      "unit": "kg",
+      "unlock_level": 6
+    },
+    {
+      "key": "flaked_barley",
+      "type": "malt",
+      "name": "Flaked barley",
+      "params": {
+        "ppkg": 250,
+        "color_l": 2,
+        "profile": "тело, стойкая пена"
+      },
+      "base_price": 8,
+      "unit": "kg",
+      "unlock_level": 7
+    },
+    {
+      "key": "roasted_barley",
+      "type": "malt",
+      "name": "Roasted barley",
+      "params": {
+        "ppkg": 240,
+        "color_l": 500,
+        "profile": "жжёный, кофе, сухость"
+      },
+      "base_price": 14,
+      "unit": "kg",
+      "unlock_level": 7
+    },
+    {
+      "key": "vienna",
+      "type": "malt",
+      "name": "Vienna",
+      "params": {
+        "ppkg": 290,
+        "color_l": 3.5,
+        "profile": "тостовый, хлебный"
+      },
+      "base_price": 9,
+      "unit": "kg",
+      "unlock_level": 8
+    },
+    {
+      "key": "flaked_wheat",
+      "type": "malt",
+      "name": "Flaked wheat (несолодованная)",
+      "params": {
+        "ppkg": 290,
+        "color_l": 1,
+        "profile": "тело, мутность"
+      },
+      "base_price": 7,
+      "unit": "kg",
+      "unlock_level": 9
+    },
+    {
+      "key": "flaked_oats",
+      "type": "malt",
+      "name": "Flaked oats",
+      "params": {
+        "ppkg": 250,
+        "color_l": 2,
+        "profile": "мягкое тело, кремовость"
+      },
+      "base_price": 8,
+      "unit": "kg",
+      "unlock_level": 11
+    },
+    {
+      "key": "magnum",
+      "type": "hop",
+      "name": "Magnum",
+      "params": {
+        "alpha": 0.13,
+        "role": "bittering",
+        "profile": "чистая горечь"
+      },
+      "base_price": 30,
+      "unit": "100g",
+      "unlock_level": 1
+    },
+    {
+      "key": "cascade",
+      "type": "hop",
+      "name": "Cascade",
+      "params": {
+        "alpha": 0.06,
+        "role": "dual",
+        "profile": "цитрус, грейпфрут, цветы"
+      },
+      "base_price": 35,
+      "unit": "100g",
+      "unlock_level": 1
+    },
+    {
+      "key": "hallertau",
+      "type": "hop",
+      "name": "Hallertau Mittelfrüh",
+      "params": {
+        "alpha": 0.04,
+        "role": "aroma",
+        "profile": "благородный, цветочно-пряный"
+      },
+      "base_price": 30,
+      "unit": "100g",
+      "unlock_level": 2
+    },
+    {
+      "key": "saaz",
+      "type": "hop",
+      "name": "Saaz",
+      "params": {
+        "alpha": 0.035,
+        "role": "aroma",
+        "profile": "благородный, пряный, землистый"
+      },
+      "base_price": 30,
+      "unit": "100g",
+      "unlock_level": 3
+    },
+    {
+      "key": "tettnang",
+      "type": "hop",
+      "name": "Tettnang",
+      "params": {
+        "alpha": 0.045,
+        "role": "aroma",
+        "profile": "благородный, мягко-пряный"
+      },
+      "base_price": 30,
+      "unit": "100g",
+      "unlock_level": 3
+    },
+    {
+      "key": "centennial",
+      "type": "hop",
+      "name": "Centennial",
+      "params": {
+        "alpha": 0.1,
+        "role": "dual",
+        "profile": "цитрус, цветы"
+      },
+      "base_price": 45,
+      "unit": "100g",
+      "unlock_level": 4
+    },
+    {
+      "key": "citra",
+      "type": "hop",
+      "name": "Citra",
+      "params": {
+        "alpha": 0.12,
+        "role": "dual",
+        "profile": "тропики, цитрус, манго"
+      },
+      "base_price": 55,
+      "unit": "100g",
+      "unlock_level": 4
+    },
+    {
+      "key": "ekg",
+      "type": "hop",
+      "name": "East Kent Goldings",
+      "params": {
+        "alpha": 0.05,
+        "role": "aroma",
+        "profile": "землистый, цветочный, медовый"
+      },
+      "base_price": 32,
+      "unit": "100g",
+      "unlock_level": 5
+    },
+    {
+      "key": "fuggle",
+      "type": "hop",
+      "name": "Fuggle",
+      "params": {
+        "alpha": 0.045,
+        "role": "aroma",
+        "profile": "землистый, древесный"
+      },
+      "base_price": 32,
+      "unit": "100g",
+      "unlock_level": 5
+    },
+    {
+      "key": "mosaic",
+      "type": "hop",
+      "name": "Mosaic",
+      "params": {
+        "alpha": 0.125,
+        "role": "aroma",
+        "profile": "тропики, ягоды, хвоя"
+      },
+      "base_price": 55,
+      "unit": "100g",
+      "unlock_level": 11
+    },
+    {
+      "key": "simcoe",
+      "type": "hop",
+      "name": "Simcoe",
+      "params": {
+        "alpha": 0.13,
+        "role": "dual",
+        "profile": "хвоя, маракуйя"
+      },
+      "base_price": 55,
+      "unit": "100g",
+      "unlock_level": 11
+    },
+    {
+      "key": "us05",
+      "type": "yeast",
+      "name": "American Ale",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.78,
+        "temp_min_c": 15,
+        "temp_max_c": 22,
+        "profile": "чистый, нейтральный"
+      },
+      "base_price": 50,
+      "unit": "pitch",
+      "unlock_level": 1
+    },
+    {
+      "key": "wheat_german",
+      "type": "yeast",
+      "name": "Bavarian Wheat",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.76,
+        "temp_min_c": 18,
+        "temp_max_c": 22,
+        "profile": "банан, гвоздика"
+      },
+      "base_price": 90,
+      "unit": "pitch",
+      "unlock_level": 2
+    },
+    {
+      "key": "german_lager",
+      "type": "yeast",
+      "name": "German Lager (34/70)",
+      "params": {
+        "yeast_type": "lager",
+        "attenuation": 0.75,
+        "temp_min_c": 9,
+        "temp_max_c": 13,
+        "profile": "чистый, отточенный"
+      },
+      "base_price": 70,
+      "unit": "pitch",
+      "unlock_level": 3
+    },
+    {
+      "key": "english_ale",
+      "type": "yeast",
+      "name": "English Ale",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.72,
+        "temp_min_c": 18,
+        "temp_max_c": 22,
+        "profile": "мягко-фруктовый, солодовый"
+      },
+      "base_price": 55,
+      "unit": "pitch",
+      "unlock_level": 5
+    },
+    {
+      "key": "irish_ale",
+      "type": "yeast",
+      "name": "Irish Ale",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.73,
+        "temp_min_c": 17,
+        "temp_max_c": 22,
+        "profile": "чистый, лёгкая фруктовость"
+      },
+      "base_price": 55,
+      "unit": "pitch",
+      "unlock_level": 7
+    },
+    {
+      "key": "belgian_wit",
+      "type": "yeast",
+      "name": "Belgian Witbier",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.75,
+        "temp_min_c": 18,
+        "temp_max_c": 24,
+        "profile": "пряный, цитрусовый"
+      },
+      "base_price": 90,
+      "unit": "pitch",
+      "unlock_level": 9
+    },
+    {
+      "key": "belgian_saison",
+      "type": "yeast",
+      "name": "Belgian Saison",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.84,
+        "temp_min_c": 20,
+        "temp_max_c": 30,
+        "profile": "перечный, фруктовый, сухой"
+      },
+      "base_price": 110,
+      "unit": "pitch",
+      "unlock_level": 10
+    },
+    {
+      "key": "belgian_abbey",
+      "type": "yeast",
+      "name": "Belgian Abbey/Tripel",
+      "params": {
+        "yeast_type": "ale",
+        "attenuation": 0.8,
+        "temp_min_c": 18,
+        "temp_max_c": 24,
+        "profile": "фрукты, специи, эфирный"
+      },
+      "base_price": 110,
+      "unit": "pitch",
+      "unlock_level": 12
+    },
+    {
+      "key": "coriander",
+      "type": "adjunct",
+      "name": "Кориандр",
+      "params": {
+        "effect": "пряность/цитрус (Witbier)"
+      },
+      "base_price": 15,
+      "unit": "100g",
+      "unlock_level": 9
+    },
+    {
+      "key": "orange_peel",
+      "type": "adjunct",
+      "name": "Цедра горького апельсина",
+      "params": {
+        "effect": "цитрус (Witbier)"
+      },
+      "base_price": 15,
+      "unit": "100g",
+      "unlock_level": 9
+    },
+    {
+      "key": "candi_sugar",
+      "type": "adjunct",
+      "name": "Бельгийский сахар (candi)",
+      "params": {
+        "effect": "+ABV, суше тело"
+      },
+      "base_price": 20,
+      "unit": "kg",
+      "unlock_level": 10
+    },
+    {
+      "key": "lactose",
+      "type": "adjunct",
+      "name": "Лактоза",
+      "params": {
+        "effect": "сладость, тело (milk-стили)"
+      },
+      "base_price": 12,
+      "unit": "kg",
+      "unlock_level": 11
+    },
+    {
+      "key": "soft",
+      "type": "water",
+      "name": "Мягкая",
+      "params": {
+        "lean": "neutral",
+        "best_for": [
+          "pilsner",
+          "hefeweizen",
+          "witbier",
+          "tripel"
+        ]
+      },
+      "base_price": 10,
+      "unit": "batch",
+      "unlock_level": 1
+    },
+    {
+      "key": "balanced",
+      "type": "water",
+      "name": "Сбалансированная",
+      "params": {
+        "lean": "neutral",
+        "best_for": [
+          "pale_ale",
+          "brown",
+          "marzen",
+          "saison"
+        ]
+      },
+      "base_price": 10,
+      "unit": "batch",
+      "unlock_level": 1
+    },
+    {
+      "key": "hoppy",
+      "type": "water",
+      "name": "Хмелевая (сульфатная)",
+      "params": {
+        "lean": "sulfate",
+        "best_for": [
+          "pale_ale",
+          "ipa"
+        ]
+      },
+      "base_price": 10,
+      "unit": "batch",
+      "unlock_level": 1
+    },
+    {
+      "key": "malty",
+      "type": "water",
+      "name": "Солодовая (хлоридная)",
+      "params": {
+        "lean": "chloride",
+        "best_for": [
+          "porter",
+          "neipa"
+        ]
+      },
+      "base_price": 10,
+      "unit": "batch",
+      "unlock_level": 1
+    },
+    {
+      "key": "carbonate",
+      "type": "water",
+      "name": "Карбонатная (Дублин)",
+      "params": {
+        "lean": "carbonate",
+        "best_for": [
+          "dry_stout"
+        ]
+      },
+      "base_price": 10,
+      "unit": "batch",
+      "unlock_level": 1
+    }
+  ],
+  "water_profiles": [
+    {
+      "key": "soft",
+      "name": "Мягкая",
+      "lean": "neutral",
+      "best_for": [
+        "pilsner",
+        "hefeweizen",
+        "witbier",
+        "tripel"
+      ]
+    },
+    {
+      "key": "balanced",
+      "name": "Сбалансированная",
+      "lean": "neutral",
+      "best_for": [
+        "pale_ale",
+        "brown",
+        "marzen",
+        "saison"
+      ]
+    },
+    {
+      "key": "hoppy",
+      "name": "Хмелевая (сульфатная)",
+      "lean": "sulfate",
+      "best_for": [
+        "pale_ale",
+        "ipa"
+      ]
+    },
+    {
+      "key": "malty",
+      "name": "Солодовая (хлоридная)",
+      "lean": "chloride",
+      "best_for": [
+        "porter",
+        "neipa"
+      ]
+    },
+    {
+      "key": "carbonate",
+      "name": "Карбонатная (Дублин)",
+      "lean": "carbonate",
+      "best_for": [
+        "dry_stout"
+      ]
+    }
+  ],
+  "equipment_catalog": [
+    {
+      "key": "kettle_20",
+      "name": "Стартовый котёл 20 л",
+      "price": 0,
+      "unlock_level": 1,
+      "effect": {
+        "volume_l": 20
+      },
+      "starter": true
+    },
+    {
+      "key": "kettle_40",
+      "name": "Котёл 40 л",
+      "price": 1500,
+      "unlock_level": 3,
+      "effect": {
+        "volume_l": 40
+      }
+    },
+    {
+      "key": "kettle_80",
+      "name": "Котёл 80 л",
+      "price": 4000,
+      "unlock_level": 6,
+      "effect": {
+        "volume_l": 80
+      }
+    },
+    {
+      "key": "temp_controller",
+      "name": "Контроль температуры",
+      "price": 1200,
+      "unlock_level": 3,
+      "effect": {
+        "green_zone_bonus": 0.1,
+        "enable_lager": true
+      }
+    },
+    {
+      "key": "fermenter_3",
+      "name": "Ферментер: слот №3",
+      "price": 800,
+      "unlock_level": 2,
+      "effect": {
+        "fermenter_slots": 3
+      }
+    },
+    {
+      "key": "fermenter_4",
+      "name": "Ферментер: слот №4",
+      "price": 1600,
+      "unlock_level": 4,
+      "effect": {
+        "fermenter_slots": 4
+      }
+    },
+    {
+      "key": "fermenter_5",
+      "name": "Ферментер: слот №5",
+      "price": 3000,
+      "unlock_level": 6,
+      "effect": {
+        "fermenter_slots": 5
+      }
+    },
+    {
+      "key": "glycol",
+      "name": "Гликолевый контроль брожения",
+      "price": 2200,
+      "unlock_level": 5,
+      "effect": {
+        "ferment_accuracy_auto": true
+      }
+    },
+    {
+      "key": "filtration",
+      "name": "Линия фильтрации и розлива",
+      "price": 1800,
+      "unlock_level": 5,
+      "effect": {
+        "quality_presentation": 2,
+        "faster_sale": true
+      }
+    },
+    {
+      "key": "cold_storage",
+      "name": "Холодный склад / выдержка",
+      "price": 2000,
+      "unlock_level": 7,
+      "effect": {
+        "enable_aging": true
+      }
+    },
+    {
+      "key": "qa_lab",
+      "name": "Лаборатория QA",
+      "price": 2500,
+      "unlock_level": 8,
+      "effect": {
+        "random_R_reduction": 0.5
+      }
+    }
+  ],
+  "store_catalog": [
+    {
+      "kind": "ingredient",
+      "ref_key": "pale_2row",
+      "title": "Pale Ale (2-row)",
+      "price_currency": "soft",
+      "price_amount": 6,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "crystal40",
+      "title": "Caramel/Crystal 40",
+      "price_currency": "soft",
+      "price_amount": 11,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "pilsner",
+      "title": "Pilsner",
+      "price_currency": "soft",
+      "price_amount": 6,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "wheat",
+      "title": "Wheat (солодовая пшеница)",
+      "price_currency": "soft",
+      "price_amount": 7,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "munich",
+      "title": "Munich",
+      "price_currency": "soft",
+      "price_amount": 9,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "crystal60",
+      "title": "Caramel/Crystal 60",
+      "price_currency": "soft",
+      "price_amount": 11,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "chocolate",
+      "title": "Chocolate malt",
+      "price_currency": "soft",
+      "price_amount": 14,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 6
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "flaked_barley",
+      "title": "Flaked barley",
+      "price_currency": "soft",
+      "price_amount": 8,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 7
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "roasted_barley",
+      "title": "Roasted barley",
+      "price_currency": "soft",
+      "price_amount": 14,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 7
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "vienna",
+      "title": "Vienna",
+      "price_currency": "soft",
+      "price_amount": 9,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 8
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "flaked_wheat",
+      "title": "Flaked wheat (несолодованная)",
+      "price_currency": "soft",
+      "price_amount": 7,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 9
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "flaked_oats",
+      "title": "Flaked oats",
+      "price_currency": "soft",
+      "price_amount": 8,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 11
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "magnum",
+      "title": "Magnum",
+      "price_currency": "soft",
+      "price_amount": 30,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "cascade",
+      "title": "Cascade",
+      "price_currency": "soft",
+      "price_amount": 35,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "hallertau",
+      "title": "Hallertau Mittelfrüh",
+      "price_currency": "soft",
+      "price_amount": 30,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "saaz",
+      "title": "Saaz",
+      "price_currency": "soft",
+      "price_amount": 30,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 3
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "tettnang",
+      "title": "Tettnang",
+      "price_currency": "soft",
+      "price_amount": 30,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 3
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "centennial",
+      "title": "Centennial",
+      "price_currency": "soft",
+      "price_amount": 45,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 4
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "citra",
+      "title": "Citra",
+      "price_currency": "soft",
+      "price_amount": 55,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 4
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "ekg",
+      "title": "East Kent Goldings",
+      "price_currency": "soft",
+      "price_amount": 32,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "fuggle",
+      "title": "Fuggle",
+      "price_currency": "soft",
+      "price_amount": 32,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "mosaic",
+      "title": "Mosaic",
+      "price_currency": "soft",
+      "price_amount": 55,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 11
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "simcoe",
+      "title": "Simcoe",
+      "price_currency": "soft",
+      "price_amount": 55,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 11
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "us05",
+      "title": "American Ale",
+      "price_currency": "soft",
+      "price_amount": 50,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "wheat_german",
+      "title": "Bavarian Wheat",
+      "price_currency": "soft",
+      "price_amount": 90,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "german_lager",
+      "title": "German Lager (34/70)",
+      "price_currency": "soft",
+      "price_amount": 70,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 3
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "english_ale",
+      "title": "English Ale",
+      "price_currency": "soft",
+      "price_amount": 55,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "irish_ale",
+      "title": "Irish Ale",
+      "price_currency": "soft",
+      "price_amount": 55,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 7
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "belgian_wit",
+      "title": "Belgian Witbier",
+      "price_currency": "soft",
+      "price_amount": 90,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 9
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "belgian_saison",
+      "title": "Belgian Saison",
+      "price_currency": "soft",
+      "price_amount": 110,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 10
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "belgian_abbey",
+      "title": "Belgian Abbey/Tripel",
+      "price_currency": "soft",
+      "price_amount": 110,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 12
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "coriander",
+      "title": "Кориандр",
+      "price_currency": "soft",
+      "price_amount": 15,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 9
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "orange_peel",
+      "title": "Цедра горького апельсина",
+      "price_currency": "soft",
+      "price_amount": 15,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 9
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "candi_sugar",
+      "title": "Бельгийский сахар (candi)",
+      "price_currency": "soft",
+      "price_amount": 20,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 10
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "lactose",
+      "title": "Лактоза",
+      "price_currency": "soft",
+      "price_amount": 12,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 11
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "soft",
+      "title": "Мягкая",
+      "price_currency": "soft",
+      "price_amount": 10,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "balanced",
+      "title": "Сбалансированная",
+      "price_currency": "soft",
+      "price_amount": 10,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "hoppy",
+      "title": "Хмелевая (сульфатная)",
+      "price_currency": "soft",
+      "price_amount": 10,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "malty",
+      "title": "Солодовая (хлоридная)",
+      "price_currency": "soft",
+      "price_amount": 10,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "carbonate",
+      "title": "Карбонатная (Дублин)",
+      "price_currency": "soft",
+      "price_amount": 10,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "kettle_40",
+      "title": "Котёл 40 л",
+      "price_currency": "soft",
+      "price_amount": 1500,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 3
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "kettle_80",
+      "title": "Котёл 80 л",
+      "price_currency": "soft",
+      "price_amount": 4000,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 6
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "temp_controller",
+      "title": "Контроль температуры",
+      "price_currency": "soft",
+      "price_amount": 1200,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 3
+    },
+    {
+      "kind": "fermenter_slot",
+      "ref_key": "fermenter_3",
+      "title": "Ферментер: слот №3",
+      "price_currency": "soft",
+      "price_amount": 800,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "fermenter_slot",
+      "ref_key": "fermenter_4",
+      "title": "Ферментер: слот №4",
+      "price_currency": "soft",
+      "price_amount": 1600,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 4
+    },
+    {
+      "kind": "fermenter_slot",
+      "ref_key": "fermenter_5",
+      "title": "Ферментер: слот №5",
+      "price_currency": "soft",
+      "price_amount": 3000,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 6
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "glycol",
+      "title": "Гликолевый контроль брожения",
+      "price_currency": "soft",
+      "price_amount": 2200,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "filtration",
+      "title": "Линия фильтрации и розлива",
+      "price_currency": "soft",
+      "price_amount": 1800,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 5
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "cold_storage",
+      "title": "Холодный склад / выдержка",
+      "price_currency": "soft",
+      "price_amount": 2000,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 7
+    },
+    {
+      "kind": "equipment",
+      "ref_key": "qa_lab",
+      "title": "Лаборатория QA",
+      "price_currency": "soft",
+      "price_amount": 2500,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 8
+    },
+    {
+      "kind": "cosmetic",
+      "ref_key": "label_classic",
+      "title": "Этикетка: Классика",
+      "price_currency": "premium",
+      "price_amount": 0,
+      "enabled": false,
+      "feature_flag": "monetization",
+      "unlock_level": 1
+    },
+    {
+      "kind": "cosmetic",
+      "ref_key": "label_vintage",
+      "title": "Этикетка: Винтаж",
+      "price_currency": "premium",
+      "price_amount": 0,
+      "enabled": false,
+      "feature_flag": "monetization",
+      "unlock_level": 1
+    },
+    {
+      "kind": "cosmetic",
+      "ref_key": "brewery_skin_oak",
+      "title": "Оформление: Дуб и медь",
+      "price_currency": "premium",
+      "price_amount": 0,
+      "enabled": false,
+      "feature_flag": "monetization",
+      "unlock_level": 1
+    }
+  ],
+  "styles": [
+    {
+      "key": "pale_ale",
+      "name": "American Pale Ale",
+      "family": "Эль (хмелевой)",
+      "og": [
+        1.045,
+        1.06
+      ],
+      "fg": [
+        1.01,
+        1.015
+      ],
+      "abv": [
+        4.5,
+        6.2
+      ],
+      "ibu": [
+        30,
+        50
+      ],
+      "srm": [
+        5,
+        10
+      ],
+      "bugu_target": [
+        0.6,
+        0.9
+      ],
+      "base_price": 95,
+      "difficulty": 1,
+      "unlock_level": 1,
+      "recipe_template": {
+        "malts": [
+          [
+            "pale_2row",
+            4.0
+          ],
+          [
+            "crystal40",
+            0.3
+          ]
+        ],
+        "hops": [
+          [
+            "magnum",
+            12,
+            "bittering",
+            60
+          ],
+          [
+            "cascade",
+            30,
+            "flavor",
+            15
+          ],
+          [
+            "cascade",
+            30,
+            "aroma",
+            5
+          ]
+        ],
+        "yeast": "us05",
+        "water": "hoppy",
+        "mash_c": 66,
+        "ferment_c": 19
+      }
+    },
+    {
+      "key": "hefeweizen",
+      "name": "German Hefeweizen",
+      "family": "Пшеничное",
+      "og": [
+        1.044,
+        1.052
+      ],
+      "fg": [
+        1.008,
+        1.014
+      ],
+      "abv": [
+        4.3,
+        5.6
+      ],
+      "ibu": [
+        8,
+        15
+      ],
+      "srm": [
+        2,
+        6
+      ],
+      "bugu_target": [
+        0.2,
+        0.35
+      ],
+      "base_price": 90,
+      "difficulty": 2,
+      "unlock_level": 2,
+      "recipe_template": {
+        "malts": [
+          [
+            "wheat",
+            2.5
+          ],
+          [
+            "pilsner",
+            2.0
+          ]
+        ],
+        "hops": [
+          [
+            "hallertau",
+            15,
+            "bittering",
+            60
+          ]
+        ],
+        "yeast": "wheat_german",
+        "water": "soft",
+        "mash_c": 67,
+        "ferment_c": 20
+      }
+    },
+    {
+      "key": "german_pils",
+      "name": "German Pils",
+      "family": "Лагер",
+      "og": [
+        1.044,
+        1.05
+      ],
+      "fg": [
+        1.008,
+        1.013
+      ],
+      "abv": [
+        4.4,
+        5.2
+      ],
+      "ibu": [
+        22,
+        40
+      ],
+      "srm": [
+        2,
+        5
+      ],
+      "bugu_target": [
+        0.55,
+        0.9
+      ],
+      "base_price": 90,
+      "difficulty": 3,
+      "unlock_level": 3,
+      "recipe_template": {
+        "malts": [
+          [
+            "pilsner",
+            4.3
+          ]
+        ],
+        "hops": [
+          [
+            "saaz",
+            20,
+            "bittering",
+            60
+          ],
+          [
+            "saaz",
+            15,
+            "flavor",
+            15
+          ],
+          [
+            "tettnang",
+            15,
+            "aroma",
+            5
+          ]
+        ],
+        "yeast": "german_lager",
+        "water": "soft",
+        "mash_c": 65,
+        "ferment_c": 10
+      }
+    },
+    {
+      "key": "american_ipa",
+      "name": "American IPA",
+      "family": "Эль (хмелевой)",
+      "og": [
+        1.056,
+        1.07
+      ],
+      "fg": [
+        1.008,
+        1.014
+      ],
+      "abv": [
+        5.5,
+        7.5
+      ],
+      "ibu": [
+        40,
+        70
+      ],
+      "srm": [
+        6,
+        14
+      ],
+      "bugu_target": [
+        0.7,
+        1.1
+      ],
+      "base_price": 110,
+      "difficulty": 2,
+      "unlock_level": 4,
+      "recipe_template": {
+        "malts": [
+          [
+            "pale_2row",
+            4.5
+          ],
+          [
+            "crystal40",
+            0.4
+          ],
+          [
+            "munich",
+            0.3
+          ]
+        ],
+        "hops": [
+          [
+            "magnum",
+            30,
+            "bittering",
+            60
+          ],
+          [
+            "centennial",
+            25,
+            "flavor",
+            15
+          ],
+          [
+            "citra",
+            30,
+            "aroma",
+            5
+          ],
+          [
+            "citra",
+            40,
+            "dry_hop",
+            0
+          ]
+        ],
+        "yeast": "us05",
+        "water": "hoppy",
+        "mash_c": 66,
+        "ferment_c": 19
+      }
+    },
+    {
+      "key": "brown_ale",
+      "name": "British Brown Ale",
+      "family": "Эль (солодовый)",
+      "og": [
+        1.04,
+        1.052
+      ],
+      "fg": [
+        1.008,
+        1.013
+      ],
+      "abv": [
+        4.2,
+        5.4
+      ],
+      "ibu": [
+        20,
+        30
+      ],
+      "srm": [
+        12,
+        22
+      ],
+      "bugu_target": [
+        0.45,
+        0.65
+      ],
+      "base_price": 90,
+      "difficulty": 2,
+      "unlock_level": 5,
+      "recipe_template": {
+        "malts": [
+          [
+            "pale_2row",
+            3.5
+          ],
+          [
+            "munich",
+            0.6
+          ],
+          [
+            "crystal60",
+            0.4
+          ]
+        ],
+        "hops": [
+          [
+            "ekg",
+            25,
+            "bittering",
+            60
+          ],
+          [
+            "fuggle",
+            15,
+            "flavor",
+            10
+          ]
+        ],
+        "yeast": "english_ale",
+        "water": "balanced",
+        "mash_c": 67,
+        "ferment_c": 20
+      }
+    },
+    {
+      "key": "american_porter",
+      "name": "American Porter",
+      "family": "Эль (тёмный)",
+      "og": [
+        1.048,
+        1.065
+      ],
+      "fg": [
+        1.012,
+        1.016
+      ],
+      "abv": [
+        4.8,
+        6.5
+      ],
+      "ibu": [
+        25,
+        50
+      ],
+      "srm": [
+        22,
+        40
+      ],
+      "bugu_target": [
+        0.5,
+        0.8
+      ],
+      "base_price": 105,
+      "difficulty": 3,
+      "unlock_level": 6,
+      "recipe_template": {
+        "malts": [
+          [
+            "pale_2row",
+            4.2
+          ],
+          [
+            "munich",
+            0.5
+          ],
+          [
+            "crystal60",
+            0.4
+          ],
+          [
+            "chocolate",
+            0.4
+          ]
+        ],
+        "hops": [
+          [
+            "magnum",
+            22,
+            "bittering",
+            60
+          ],
+          [
+            "cascade",
+            20,
+            "flavor",
+            10
+          ]
+        ],
+        "yeast": "us05",
+        "water": "malty",
+        "mash_c": 67,
+        "ferment_c": 19
+      }
+    },
+    {
+      "key": "dry_stout",
+      "name": "Irish Dry Stout",
+      "family": "Эль (тёмный)",
+      "og": [
+        1.036,
+        1.044
+      ],
+      "fg": [
+        1.007,
+        1.011
+      ],
+      "abv": [
+        4.0,
+        4.5
+      ],
+      "ibu": [
+        25,
+        45
+      ],
+      "srm": [
+        25,
+        40
+      ],
+      "bugu_target": [
+        0.8,
+        1.2
+      ],
+      "base_price": 100,
+      "difficulty": 3,
+      "unlock_level": 7,
+      "recipe_template": {
+        "malts": [
+          [
+            "pale_2row",
+            3.2
+          ],
+          [
+            "flaked_barley",
+            0.5
+          ],
+          [
+            "roasted_barley",
+            0.5
+          ]
+        ],
+        "hops": [
+          [
+            "magnum",
+            25,
+            "bittering",
+            60
+          ]
+        ],
+        "yeast": "irish_ale",
+        "water": "carbonate",
+        "mash_c": 66,
+        "ferment_c": 19
+      }
+    },
+    {
+      "key": "marzen",
+      "name": "Märzen / Oktoberfest",
+      "family": "Лагер",
+      "og": [
+        1.054,
+        1.06
+      ],
+      "fg": [
+        1.01,
+        1.014
+      ],
+      "abv": [
+        5.6,
+        6.3
+      ],
+      "ibu": [
+        18,
+        24
+      ],
+      "srm": [
+        8,
+        17
+      ],
+      "bugu_target": [
+        0.35,
+        0.45
+      ],
+      "base_price": 95,
+      "difficulty": 4,
+      "unlock_level": 8,
+      "recipe_template": {
+        "malts": [
+          [
+            "vienna",
+            3.0
+          ],
+          [
+            "munich",
+            2.0
+          ],
+          [
+            "pilsner",
+            0.5
+          ]
+        ],
+        "hops": [
+          [
+            "tettnang",
+            20,
+            "bittering",
+            60
+          ],
+          [
+            "hallertau",
+            15,
+            "flavor",
+            15
+          ]
+        ],
+        "yeast": "german_lager",
+        "water": "balanced",
+        "mash_c": 67,
+        "ferment_c": 10
+      }
+    },
+    {
+      "key": "witbier",
+      "name": "Witbier",
+      "family": "Бельгийское/пшеничное",
+      "og": [
+        1.044,
+        1.052
+      ],
+      "fg": [
+        1.008,
+        1.012
+      ],
+      "abv": [
+        4.5,
+        5.5
+      ],
+      "ibu": [
+        8,
+        20
+      ],
+      "srm": [
+        2,
+        4
+      ],
+      "bugu_target": [
+        0.2,
+        0.4
+      ],
+      "base_price": 95,
+      "difficulty": 3,
+      "unlock_level": 9,
+      "recipe_template": {
+        "malts": [
+          [
+            "pilsner",
+            2.3
+          ],
+          [
+            "flaked_wheat",
+            2.0
+          ]
+        ],
+        "hops": [
+          [
+            "hallertau",
+            15,
+            "bittering",
+            60
+          ]
+        ],
+        "adjuncts": [
+          [
+            "coriander",
+            0.2
+          ],
+          [
+            "orange_peel",
+            0.2
+          ]
+        ],
+        "yeast": "belgian_wit",
+        "water": "soft",
+        "mash_c": 66,
+        "ferment_c": 21
+      }
+    },
+    {
+      "key": "saison",
+      "name": "Belgian Saison",
+      "family": "Бельгийское",
+      "og": [
+        1.048,
+        1.065
+      ],
+      "fg": [
+        1.002,
+        1.008
+      ],
+      "abv": [
+        5.0,
+        7.0
+      ],
+      "ibu": [
+        20,
+        35
+      ],
+      "srm": [
+        5,
+        14
+      ],
+      "bugu_target": [
+        0.4,
+        0.7
+      ],
+      "base_price": 115,
+      "difficulty": 4,
+      "unlock_level": 10,
+      "recipe_template": {
+        "malts": [
+          [
+            "pilsner",
+            4.0
+          ],
+          [
+            "vienna",
+            0.4
+          ]
+        ],
+        "adjuncts": [
+          [
+            "candi_sugar",
+            0.4
+          ]
+        ],
+        "hops": [
+          [
+            "ekg",
+            25,
+            "bittering",
+            60
+          ],
+          [
+            "saaz",
+            15,
+            "flavor",
+            10
+          ]
+        ],
+        "yeast": "belgian_saison",
+        "water": "balanced",
+        "mash_c": 64,
+        "ferment_c": 26
+      }
+    },
+    {
+      "key": "hazy_ipa",
+      "name": "Hazy IPA (NEIPA)",
+      "family": "Эль (хмелевой)",
+      "og": [
+        1.06,
+        1.075
+      ],
+      "fg": [
+        1.01,
+        1.015
+      ],
+      "abv": [
+        6.0,
+        7.5
+      ],
+      "ibu": [
+        25,
+        60
+      ],
+      "srm": [
+        4,
+        7
+      ],
+      "bugu_target": [
+        0.5,
+        0.9
+      ],
+      "base_price": 135,
+      "difficulty": 5,
+      "unlock_level": 11,
+      "recipe_template": {
+        "malts": [
+          [
+            "pale_2row",
+            4.5
+          ],
+          [
+            "flaked_oats",
+            0.8
+          ],
+          [
+            "wheat",
+            0.5
+          ]
+        ],
+        "hops": [
+          [
+            "magnum",
+            10,
+            "bittering",
+            60
+          ],
+          [
+            "citra",
+            40,
+            "aroma",
+            5
+          ],
+          [
+            "mosaic",
+            40,
+            "dry_hop",
+            0
+          ],
+          [
+            "simcoe",
+            30,
+            "dry_hop",
+            0
+          ]
+        ],
+        "yeast": "us05",
+        "water": "malty",
+        "mash_c": 67,
+        "ferment_c": 20
+      }
+    },
+    {
+      "key": "tripel",
+      "name": "Belgian Tripel",
+      "family": "Бельгийское (крепкое)",
+      "og": [
+        1.075,
+        1.085
+      ],
+      "fg": [
+        1.008,
+        1.014
+      ],
+      "abv": [
+        7.5,
+        9.5
+      ],
+      "ibu": [
+        20,
+        40
+      ],
+      "srm": [
+        4.5,
+        7
+      ],
+      "bugu_target": [
+        0.3,
+        0.5
+      ],
+      "base_price": 150,
+      "difficulty": 5,
+      "unlock_level": 12,
+      "recipe_template": {
+        "malts": [
+          [
+            "pilsner",
+            5.5
+          ]
+        ],
+        "adjuncts": [
+          [
+            "candi_sugar",
+            0.6
+          ]
+        ],
+        "hops": [
+          [
+            "saaz",
+            25,
+            "bittering",
+            60
+          ],
+          [
+            "tettnang",
+            15,
+            "flavor",
+            10
+          ]
+        ],
+        "yeast": "belgian_abbey",
+        "water": "soft",
+        "mash_c": 65,
+        "ferment_c": 22
+      }
+    }
+  ],
+  "xp_curve": [
+    {
+      "level": 1,
+      "xp_to_next": 100
+    },
+    {
+      "level": 2,
+      "xp_to_next": 283
+    },
+    {
+      "level": 3,
+      "xp_to_next": 520
+    },
+    {
+      "level": 4,
+      "xp_to_next": 800
+    },
+    {
+      "level": 5,
+      "xp_to_next": 1118
+    },
+    {
+      "level": 6,
+      "xp_to_next": 1470
+    },
+    {
+      "level": 7,
+      "xp_to_next": 1852
+    },
+    {
+      "level": 8,
+      "xp_to_next": 2263
+    },
+    {
+      "level": 9,
+      "xp_to_next": 2700
+    },
+    {
+      "level": 10,
+      "xp_to_next": 3162
+    },
+    {
+      "level": 11,
+      "xp_to_next": 3648
+    },
+    {
+      "level": 12,
+      "xp_to_next": 4157
+    }
+  ]
+}
