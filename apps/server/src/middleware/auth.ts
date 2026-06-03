@@ -72,5 +72,10 @@ export async function authMiddleware(
   }
 
   // Гарантируем что пользователь существует в БД при любом запросе
-  await getOrCreateUser(request.telegramUser)
+  try {
+    await getOrCreateUser(request.telegramUser)
+  } catch (err) {
+    request.log.error({ err, tgId: request.telegramUser.id }, 'getOrCreateUser failed in authMiddleware')
+    return reply.code(500).send({ error: 'Failed to initialize user', detail: err instanceof Error ? err.message : String(err) })
+  }
 }
