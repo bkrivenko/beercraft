@@ -48,7 +48,7 @@ function EmptyBatches({ onBrew }: { onBrew?: () => void }) {
 }
 
 // ── Главный экран ─────────────────────────────────────────────────────────────
-export function HomeScreen({ onBrew, onMarket, onProfile }: { onBrew?: () => void; onMarket?: () => void; onProfile?: () => void }) {
+export function HomeScreen({ onBrew }: { onBrew?: () => void }) {
   const { displayName } = useTelegram()
   const { profile, loading: profileLoading } = useProfile()
   const { batches, loading: batchesLoading } = useBatches(10_000)
@@ -61,16 +61,13 @@ export function HomeScreen({ onBrew, onMarket, onProfile }: { onBrew?: () => voi
 
       {/* Шапка */}
       <header className="bg-brown-900 border-b border-brown-800 px-4 py-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-amber-400 text-xs font-semibold uppercase tracking-wider">
-              Добро пожаловать
-            </p>
-            <h1 className="text-cream-100 text-xl font-bold">
-              {displayName} 👋
-            </h1>
-          </div>
-          <button className="text-cream-200 text-xl opacity-60 active:opacity-100" onClick={onProfile}>⚙</button>
+        <div className="mb-3">
+          <p className="text-amber-400 text-xs font-semibold uppercase tracking-wider">
+            Добро пожаловать
+          </p>
+          <h1 className="text-cream-100 text-xl font-bold">
+            {displayName} 👋
+          </h1>
         </div>
 
         {/* Статы */}
@@ -160,19 +157,13 @@ export function HomeScreen({ onBrew, onMarket, onProfile }: { onBrew?: () => voi
         </div>
       </section>
 
-      {/* Кнопки — над BottomNav (bottom-16 = 64px высота нав-бара) */}
-      <div className="fixed bottom-16 left-0 right-0 px-4 pb-3 pt-4 bg-gradient-to-t from-brown-950 via-brown-950/90 to-transparent space-y-2 pointer-events-none">
+      {/* Кнопка — над BottomNav */}
+      <div className="fixed bottom-16 left-0 right-0 px-4 pb-3 pt-4 bg-gradient-to-t from-brown-950 via-brown-950/90 to-transparent">
         <button
-          className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80 pointer-events-auto"
+          className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80"
           onClick={onBrew}
         >
           🍺 Сварить партию
-        </button>
-        <button
-          className="w-full border border-brown-700 text-cream-100 font-bold py-3 rounded-2xl text-sm active:opacity-70 pointer-events-auto"
-          onClick={onMarket}
-        >
-          💰 Рынок и продажа
         </button>
       </div>
     </div>

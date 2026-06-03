@@ -45,11 +45,7 @@ export default function App() {
   return (
     <div className="pb-16">   {/* отступ под BottomNav */}
       {screen === 'home' && (
-        <HomeScreen
-          onBrew={() => setScreen('recipe')}
-          onMarket={() => setScreen('market')}
-          onProfile={() => setScreen('profile')}
-        />
+        <HomeScreen onBrew={() => setScreen('recipe')} />
       )}
       {screen === 'recipe' && (
         <RecipeConstructor
