@@ -78,6 +78,192 @@ export const WATER_PROFILES: WaterProfile[] = [
   { key: 'carbonate',  name: 'Карбонатная (Дублин)',  lean: 'carbonate', best_for: ['dry_stout'] },
 ]
 
+// Рецептурные рекомендации по стилям (только из доступных ингредиентов)
+export interface StyleRecipe {
+  malts:       Array<{ key: string; name: string; amountKg: number; role: string }>
+  hops:        Array<{ key: string; name: string; amountG: number; timing: string; role: string }>
+  yeastKey:    string
+  yeastName:   string
+  waterKey:    string
+  waterName:   string
+  mashTempC:   number
+  fermentTempC: number
+  notes:       string
+}
+
+export const STYLE_RECIPES: Record<string, StyleRecipe> = {
+  pale_ale: {
+    malts: [
+      { key: 'pale_2row',  name: 'Pale Ale (2-row)',   amountKg: 4.0, role: 'основа' },
+      { key: 'crystal40',  name: 'Caramel/Crystal 40', amountKg: 0.3, role: 'карамель, цвет' },
+    ],
+    hops: [
+      { key: 'magnum',  name: 'Magnum',  amountG: 12, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'cascade', name: 'Cascade', amountG: 30, timing: 'flavor',    role: '🌿 аромат' },
+      { key: 'cascade', name: 'Cascade', amountG: 20, timing: 'aroma',     role: '🌸 аромат' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'hoppy', waterName: 'Хмелевая (сульфатная)',
+    mashTempC: 66, fermentTempC: 19,
+    notes: 'Классика: хмелевой аромат, умеренная горечь, чистый вкус.',
+  },
+  ipa: {
+    malts: [
+      { key: 'pale_2row',  name: 'Pale Ale (2-row)',   amountKg: 4.5, role: 'основа' },
+      { key: 'crystal40',  name: 'Caramel/Crystal 40', amountKg: 0.3, role: 'тело, карамель' },
+    ],
+    hops: [
+      { key: 'magnum',     name: 'Magnum',     amountG: 25, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'centennial', name: 'Centennial', amountG: 25, timing: 'flavor',    role: '🌿 вкус' },
+      { key: 'citra',      name: 'Citra',      amountG: 30, timing: 'aroma',     role: '🌸 тропики' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'hoppy', waterName: 'Хмелевая (сульфатная)',
+    mashTempC: 65, fermentTempC: 19,
+    notes: 'Интенсивная горечь, яркий хмелевой аромат (цитрус, тропики).',
+  },
+  hefeweizen: {
+    malts: [
+      { key: 'wheat',    name: 'Wheat Malt', amountKg: 2.5, role: 'основа (50%+)' },
+      { key: 'pilsner',  name: 'Pilsner',    amountKg: 2.0, role: 'основа' },
+    ],
+    hops: [
+      { key: 'hallertau', name: 'Hallertau', amountG: 15, timing: 'bittering', role: '⚡ горечь' },
+    ],
+    yeastKey: 'wb06', yeastName: 'WB-06 Weizen',
+    waterKey: 'soft', waterName: 'Мягкая',
+    mashTempC: 67, fermentTempC: 20,
+    notes: 'Дрожжи WB-06 дают характерные нотки банана и гвоздики.',
+  },
+  stout: {
+    malts: [
+      { key: 'pale_2row',  name: 'Pale Ale (2-row)', amountKg: 3.2, role: 'основа' },
+      { key: 'roasted',    name: 'Roasted Barley',   amountKg: 0.5, role: 'жжёный вкус, цвет' },
+      { key: 'crystal80',  name: 'Crystal 80',        amountKg: 0.3, role: 'карамель, тело' },
+    ],
+    hops: [
+      { key: 'magnum', name: 'Magnum', amountG: 22, timing: 'bittering', role: '⚡ горечь' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'carbonate', waterName: 'Карбонатная (Дублин)',
+    mashTempC: 66, fermentTempC: 19,
+    notes: 'Roasted Barley даёт кофейный/шоколадный вкус и угольно-чёрный цвет.',
+  },
+  dry_stout: {
+    malts: [
+      { key: 'pale_2row', name: 'Pale Ale (2-row)', amountKg: 3.2, role: 'основа' },
+      { key: 'roasted',   name: 'Roasted Barley',   amountKg: 0.5, role: 'жжёный, кофе' },
+      { key: 'crystal80', name: 'Crystal 80',        amountKg: 0.3, role: 'карамель' },
+    ],
+    hops: [
+      { key: 'magnum', name: 'Magnum', amountG: 22, timing: 'bittering', role: '⚡ горечь' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'carbonate', waterName: 'Карбонатная (Дублин)',
+    mashTempC: 66, fermentTempC: 19,
+    notes: 'Сухое послевкусие, минимальная сладость. Снизь OG до нижней границы.',
+  },
+  porter: {
+    malts: [
+      { key: 'pale_2row',  name: 'Pale Ale (2-row)', amountKg: 4.0, role: 'основа' },
+      { key: 'chocolate',  name: 'Chocolate Malt',   amountKg: 0.4, role: 'шоколад, цвет' },
+      { key: 'crystal40',  name: 'Caramel/Crystal 40', amountKg: 0.4, role: 'карамель, тело' },
+    ],
+    hops: [
+      { key: 'magnum',  name: 'Magnum',  amountG: 20, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'cascade', name: 'Cascade', amountG: 15, timing: 'flavor',    role: '🌿 вкус' },
+    ],
+    yeastKey: 'notty', yeastName: 'Nottingham Ale',
+    waterKey: 'malty', waterName: 'Солодовая (хлоридная)',
+    mashTempC: 67, fermentTempC: 19,
+    notes: 'Тёмный солод даёт шоколадно-кофейные нотки. Солодовая вода смягчает горечь.',
+  },
+  pilsner: {
+    malts: [
+      { key: 'pilsner', name: 'Pilsner', amountKg: 4.3, role: 'основа (100%)' },
+    ],
+    hops: [
+      { key: 'saaz', name: 'Saaz', amountG: 20, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'saaz', name: 'Saaz', amountG: 15, timing: 'flavor',    role: '🌿 пряный' },
+    ],
+    yeastKey: 's23', yeastName: 'S-23 Lager',
+    waterKey: 'soft', waterName: 'Мягкая',
+    mashTempC: 65, fermentTempC: 10,
+    notes: 'Требует S-23 (лагерные дрожжи). Брожение при 10°C — холодно и долго. Чистый, зерновой вкус.',
+  },
+  neipa: {
+    malts: [
+      { key: 'pale_2row',   name: 'Pale Ale (2-row)', amountKg: 4.0, role: 'основа' },
+      { key: 'flaked_oats', name: 'Flaked Oats',       amountKg: 0.8, role: 'мутность, тело' },
+      { key: 'wheat',       name: 'Wheat Malt',        amountKg: 0.5, role: 'мутность, пена' },
+    ],
+    hops: [
+      { key: 'citra',  name: 'Citra',  amountG: 15, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'mosaic', name: 'Mosaic', amountG: 40, timing: 'aroma',     role: '🌸 тропики' },
+      { key: 'simcoe', name: 'Simcoe', amountG: 40, timing: 'dry_hop',   role: '🧊 сухое охмеление' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'malty', waterName: 'Солодовая (хлоридная)',
+    mashTempC: 67, fermentTempC: 20,
+    notes: 'Мутная, тропическая, мягкая. Сухое охмеление — ключ к аромату. Ovats/пшеница дают тело.',
+  },
+  saison: {
+    malts: [
+      { key: 'pilsner', name: 'Pilsner', amountKg: 4.2, role: 'основа' },
+    ],
+    hops: [
+      { key: 'saaz',    name: 'Saaz',    amountG: 20, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'hallertau',name:'Hallertau',amountG: 15, timing: 'flavor',   role: '🌿 пряный' },
+    ],
+    yeastKey: 'notty', yeastName: 'Nottingham Ale',
+    waterKey: 'balanced', waterName: 'Сбалансированная',
+    mashTempC: 64, fermentTempC: 22,
+    notes: 'Высокая температура брожения (22°C+) даёт фруктово-пряный характер.',
+  },
+  brown: {
+    malts: [
+      { key: 'pale_2row',  name: 'Pale Ale (2-row)', amountKg: 3.8, role: 'основа' },
+      { key: 'crystal80',  name: 'Crystal 80',        amountKg: 0.5, role: 'карамель, изюм' },
+      { key: 'chocolate',  name: 'Chocolate Malt',    amountKg: 0.2, role: 'цвет, шоколад' },
+    ],
+    hops: [
+      { key: 'centennial', name: 'Centennial', amountG: 20, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'cascade',    name: 'Cascade',    amountG: 15, timing: 'flavor',    role: '🌿 аромат' },
+    ],
+    yeastKey: 'notty', yeastName: 'Nottingham Ale',
+    waterKey: 'balanced', waterName: 'Сбалансированная',
+    mashTempC: 67, fermentTempC: 19,
+    notes: 'Карамельная сладость, орех, лёгкий шоколад. Умеренная горечь.',
+  },
+  witbier: {
+    malts: [
+      { key: 'pilsner', name: 'Pilsner',    amountKg: 2.3, role: 'основа' },
+      { key: 'wheat',   name: 'Wheat Malt', amountKg: 2.0, role: 'основа (40%+)' },
+    ],
+    hops: [
+      { key: 'hallertau', name: 'Hallertau', amountG: 14, timing: 'bittering', role: '⚡ горечь' },
+    ],
+    yeastKey: 'wb06', yeastName: 'WB-06 Weizen',
+    waterKey: 'soft', waterName: 'Мягкая',
+    mashTempC: 66, fermentTempC: 21,
+    notes: 'Традиционно добавляют кориандр и апельсиновую цедру (добавки). Лёгкое, освежающее.',
+  },
+  marzen: {
+    malts: [
+      { key: 'pilsner', name: 'Pilsner', amountKg: 2.5, role: 'основа' },
+      { key: 'munich',  name: 'Munich',  amountKg: 2.0, role: 'хлебный, солодовый' },
+    ],
+    hops: [
+      { key: 'hallertau', name: 'Hallertau', amountG: 20, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'saaz',      name: 'Saaz',      amountG: 15, timing: 'flavor',    role: '🌿 пряный' },
+    ],
+    yeastKey: 's23', yeastName: 'S-23 Lager',
+    waterKey: 'balanced', waterName: 'Сбалансированная',
+    mashTempC: 67, fermentTempC: 10,
+    notes: 'Октябрьское пиво. Munich даёт насыщенный солодовый хлебный вкус.',
+  },
+}
+
 // Стили
 export const BEER_STYLES: StyleData[] = [
   { key: 'pale_ale',   name: 'American Pale Ale',  family: 'Эль (хмелевой)',  og: [1.045, 1.060], fg: [1.010, 1.015], abv: [4.5, 6.2], ibu: [30, 50],  srm: [5, 10],   bugu_target: [0.6, 0.9], base_price: 95,  difficulty: 1, unlock_level: 1 },

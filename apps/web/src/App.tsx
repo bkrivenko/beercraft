@@ -5,15 +5,17 @@ import { BrewingGame }       from './screens/BrewingGame'
 import { MarketScreen }      from './screens/MarketScreen'
 import { ProfileScreen }     from './screens/ProfileScreen'
 import { DuelScreen }        from './screens/DuelScreen'
+import { StylesScreen }      from './screens/StylesScreen'
 import { api }               from './lib/api'
 import type { StartBatchBody } from './lib/api'
 import './App.css'
 
-type Screen = 'home' | 'recipe' | 'brewing' | 'market' | 'duel' | 'profile'
+type Screen = 'home' | 'recipe' | 'brewing' | 'styles' | 'market' | 'duel' | 'profile'
 
 // ── Bottom Navigation ─────────────────────────────────────────────────────────
 const NAV_ITEMS: Array<{ key: Screen; icon: string; label: string }> = [
   { key: 'home',    icon: '🍺', label: 'Пивоварня' },
+  { key: 'styles',  icon: '📖', label: 'Рецепты'   },
   { key: 'market',  icon: '🏪', label: 'Рынок'     },
   { key: 'duel',    icon: '⚔️', label: 'Дуэль'     },
   { key: 'profile', icon: '👤', label: 'Профиль'   },
@@ -50,6 +52,7 @@ export default function App() {
   const [recipeStyleKey, setRecipeStyleKey] = useState<string | undefined>(undefined)
 
   const showNav = !['recipe', 'brewing'].includes(screen)
+  const navActiveKey = ['recipe', 'brewing'].includes(screen) ? 'home' : screen
 
   const handleBrew = useCallback(async (recipe: Omit<StartBatchBody, 'name'>) => {
     setBrewing(true)
@@ -128,6 +131,7 @@ export default function App() {
         />
       )}
 
+      {screen === 'styles'  && <StylesScreen  onBrew={handleStartBrew} />}
       {screen === 'market'  && <MarketScreen  onBack={() => setScreen('home')} />}
       {screen === 'duel'    && <DuelScreen />}
       {screen === 'profile' && <ProfileScreen onBack={() => setScreen('home')} />}
