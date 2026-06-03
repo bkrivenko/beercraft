@@ -16,6 +16,7 @@ import { duelRoutes }                from './routes/api/v1/duel.js'
 import { webhookRoutes }             from './routes/webhook.js'
 import { matchWsRoutes }             from './routes/ws/match.js'
 import { cancelStaleMatches }        from './services/match.service.js'
+import { giveStarterPackToAll }      from './services/user.service.js'
 
 const app = Fastify({ logger: true })
 
@@ -40,6 +41,9 @@ await app.register(matchWsRoutes)
 
 // ── Telegram Webhook ──────────────────────────────────────────────────────────
 await app.register(webhookRoutes)
+
+// ── Стартовый набор для всех пользователей ───────────────────────────────────
+giveStarterPackToAll().catch((e) => console.error('[starter] failed:', e))
 
 // ── Фоновые воркеры ───────────────────────────────────────────────────────────
 startNotificationWorker()
