@@ -151,7 +151,6 @@ function DuelBeerCard({
 
 function LobbyPhase({
   state,
-  myUserId,
   onConnect,
   onCreateRoom,
   onJoinRoom,
@@ -159,7 +158,6 @@ function LobbyPhase({
   onLeave,
 }: {
   state:        LobbyState
-  myUserId:     string | null
   onConnect:    () => void
   onCreateRoom: () => void
   onJoinRoom:   (code: string) => void
@@ -642,7 +640,6 @@ export function DuelScreen({ onStartBrew }: DuelScreenProps) {
       {phase === 'lobby' && (
         <LobbyPhase
           state={state}
-          myUserId={myUserId.current}
           onConnect={connect}
           onCreateRoom={createRoom}
           onJoinRoom={joinRoom}
