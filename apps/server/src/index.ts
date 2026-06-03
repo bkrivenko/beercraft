@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import Fastify from 'fastify'
+import fastifyCors    from '@fastify/cors'
 import fastifyWebsocket from '@fastify/websocket'
 import { prisma }                    from './db/client.js'
 import { closeRedis }                from './lib/redis.js'
@@ -19,6 +20,10 @@ import { cancelStaleMatches }        from './services/match.service.js'
 const app = Fastify({ logger: true })
 
 // ── Плагины ───────────────────────────────────────────────────────────────────
+await app.register(fastifyCors, {
+  origin: process.env.CORS_ORIGIN ?? '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+})
 await app.register(fastifyWebsocket)
 
 // ── REST Routes ───────────────────────────────────────────────────────────────
