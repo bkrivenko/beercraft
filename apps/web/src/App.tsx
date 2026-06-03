@@ -3,14 +3,16 @@ import { HomeScreen }        from './screens/HomeScreen'
 import { RecipeConstructor } from './screens/recipe/RecipeConstructor'
 import { MarketScreen }      from './screens/MarketScreen'
 import { ProfileScreen }     from './screens/ProfileScreen'
+import { DuelScreen }        from './screens/DuelScreen'
 import './App.css'
 
-type Screen = 'home' | 'recipe' | 'market' | 'profile'
+type Screen = 'home' | 'recipe' | 'market' | 'duel' | 'profile'
 
 // ── Bottom Navigation ─────────────────────────────────────────────────────────
 const NAV_ITEMS: Array<{ key: Screen; icon: string; label: string }> = [
   { key: 'home',    icon: '🍺', label: 'Пивоварня' },
-  { key: 'market',  icon: '💰', label: 'Рынок'     },
+  { key: 'market',  icon: '🏪', label: 'Рынок'     },
+  { key: 'duel',    icon: '⚔️', label: 'Дуэль'     },
   { key: 'profile', icon: '👤', label: 'Профиль'   },
 ]
 
@@ -43,7 +45,7 @@ export default function App() {
   const showNav = screen !== 'recipe'
 
   return (
-    <div className="pb-16">   {/* отступ под BottomNav */}
+    <div className="pb-16">
       {screen === 'home' && (
         <HomeScreen onBrew={() => setScreen('recipe')} />
       )}
@@ -58,6 +60,7 @@ export default function App() {
         />
       )}
       {screen === 'market'  && <MarketScreen  onBack={() => setScreen('home')} />}
+      {screen === 'duel'    && <DuelScreen />}
       {screen === 'profile' && <ProfileScreen onBack={() => setScreen('home')} />}
 
       {showNav && <BottomNav current={screen} onChange={setScreen} />}

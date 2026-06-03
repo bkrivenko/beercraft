@@ -61,6 +61,12 @@ export const api = {
   sellBatch:       (batchId: string) => request<SellResult>('/api/v1/market/sell', { method: 'POST', body: JSON.stringify({ batchId }) }),
   fulfillOrder:    (orderId: string, batchId: string) => request<FulfillResult>('/api/v1/market/fulfill', { method: 'POST', body: JSON.stringify({ orderId, batchId }) }),
 
+  // Матч / Дуэль
+  getMatch:       (matchId: string) => request<any>(`/api/v1/match/${matchId}`),
+  submitMatch:    (matchId: string, batchId: string) =>
+    request<any>(`/api/v1/match/${matchId}/submit`, { method: 'POST', body: JSON.stringify({ batchId }) }),
+  matchHistory:   () => request<{ items: any[] }>('/api/v1/match/history'),
+
   // Ингредиенты
   getIngredients: () => request<{ items: Ingredient[]; total: number }>('/api/v1/ingredients'),
   getInventory:   () => request<{ items: InventoryItem[]; total: number }>('/api/v1/inventory'),
