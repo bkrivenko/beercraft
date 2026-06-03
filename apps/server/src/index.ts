@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import Fastify from 'fastify'
+import fastifyWebsocket from '@fastify/websocket'
 import { prisma } from './db/client.js'
 import { closeRedis } from './lib/redis.js'
 import { startNotificationWorker, stopNotificationWorker } from './lib/notificationWorker.js'
@@ -8,15 +9,22 @@ import { meRoutes }         from './routes/api/v1/me.js'
 import { ingredientRoutes } from './routes/api/v1/ingredients.js'
 import { batchRoutes }      from './routes/api/v1/batches.js'
 import { marketRoutes }     from './routes/api/v1/market.js'
+import { matchWsRoutes }    from './routes/ws/match.js'
 
 const app = Fastify({ logger: true })
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+// ── WebSocket плагин (до роутов) ──────────────────────────────────────────────
+await app.register(fastifyWebsocket)
+
+// ── REST Routes ───────────────────────────────────────────────────────────────
 await app.register(healthRoutes,     { prefix: '/api/v1' })
 await app.register(meRoutes,         { prefix: '/api/v1' })
 await app.register(ingredientRoutes, { prefix: '/api/v1' })
 await app.register(batchRoutes,      { prefix: '/api/v1' })
 await app.register(marketRoutes,     { prefix: '/api/v1' })
+
+// ── WebSocket Routes ──────────────────────────────────────────────────────────
+await app.register(matchWsRoutes)
 
 // ── Уведомления: воркер готовности партий ─────────────────────────────────────
 startNotificationWorker()
