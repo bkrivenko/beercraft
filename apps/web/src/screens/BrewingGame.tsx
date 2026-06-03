@@ -465,6 +465,7 @@ export function BrewingGame({ batchId, onDone }: { batchId: string; onDone: () =
 
       {phase.type === 'playing' && (
         <StageScreen
+          key={phase.stageIdx}
           stage={STAGES[phase.stageIdx]}
           stageIdx={phase.stageIdx}
           totalStages={STAGES.length}
