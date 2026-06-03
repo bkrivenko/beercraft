@@ -6,7 +6,7 @@
  * попадает в зелёную зону. Позиция → accuracy (0–1).
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../lib/api'
 import type { Batch } from '../lib/api'
 
@@ -79,7 +79,6 @@ function TimingBar({
   tapPosition: number | null
 }) {
   const posRef    = useRef(0)
-  const dirRef    = useRef(1)
   const rafRef    = useRef<number>(0)
   const startRef  = useRef(0)
   const [pos, setPos] = useState(0)
@@ -299,8 +298,7 @@ function SummaryScreen({
   scores:  Record<string, number>
   onDone:  (batch: Batch) => void
 }) {
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function submit() {
@@ -313,7 +311,6 @@ function SummaryScreen({
         onDone(batch)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Ошибка отправки результата')
-        setLoading(false)
       }
     }
     submit()
