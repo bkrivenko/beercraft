@@ -385,9 +385,10 @@ interface RecipeConstructorProps {
   }) => void
   onSave?: () => void
   onBack?: () => void
+  brewing?: boolean
 }
 
-export function RecipeConstructor({ onBrew, onSave, onBack }: RecipeConstructorProps) {
+export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false }: RecipeConstructorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('malt')
   const [targetStyleKey, setTargetStyleKey] = useState<string>('ipa')
 
@@ -514,17 +515,17 @@ export function RecipeConstructor({ onBrew, onSave, onBack }: RecipeConstructorP
           Сохранить
         </button>
         <button
-          disabled={!canBrew}
+          disabled={!canBrew || brewing}
           className={`flex-1 font-bold py-3 rounded-xl transition-colors ${
-            canBrew
+            canBrew && !brewing
               ? 'bg-amber-600 text-brown-950 active:opacity-80'
               : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
           }`}
-          onClick={() => canBrew && onBrew?.({
+          onClick={() => canBrew && !brewing && onBrew?.({
             malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, targetStyleKey: targetStyleKey || undefined,
           })}
         >
-          🍺 Варить
+          {brewing ? '⏳ Запуск…' : '🍺 Варить'}
         </button>
       </div>
     </div>
