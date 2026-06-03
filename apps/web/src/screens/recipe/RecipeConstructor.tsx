@@ -43,13 +43,16 @@ function AmountControl({
   value,
   step,
   unit,
+  max,
   onChange,
 }: {
-  value: number
-  step: number
-  unit: string
+  value:    number
+  step:     number
+  unit:     string
+  max?:     number
   onChange: (v: number) => void
 }) {
+  const atMax = max != null && value >= max
   return (
     <div className="flex items-center gap-2">
       <button
@@ -60,8 +63,15 @@ function AmountControl({
         {value > 0 ? `${value} ${unit}` : '—'}
       </span>
       <button
-        className="w-7 h-7 rounded-full bg-amber-600 text-brown-950 font-bold text-base flex items-center justify-center active:opacity-70"
-        onClick={() => onChange(Math.round((value + step) * 100) / 100)}
+        disabled={atMax}
+        className={`w-7 h-7 rounded-full font-bold text-base flex items-center justify-center ${
+          atMax ? 'bg-brown-700 text-brown-500 cursor-not-allowed' : 'bg-amber-600 text-brown-950 active:opacity-70'
+        }`}
+        onClick={() => {
+          if (atMax) return
+          const next = Math.round((value + step) * 100) / 100
+          onChange(max != null ? Math.min(next, max) : next)
+        }}
       >+</button>
     </div>
   )
@@ -129,6 +139,7 @@ function MaltTab({
                   value={entry?.amountKg ?? 0}
                   step={0.1}
                   unit="кг"
+                  max={inStock}
                   onChange={(v) => setAmount(ing.key, v)}
                 />
               ) : (
@@ -235,6 +246,7 @@ function HopsTab({
                 value={hop.amountG}
                 step={5}
                 unit="г"
+                max={(stockMap[hop.key] ?? 0) * 100}
                 onChange={(v) => updateHop(idx, { amountG: v })}
               />
             </div>

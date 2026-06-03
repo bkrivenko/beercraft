@@ -70,6 +70,8 @@ export default function App() {
       let msg = raw
       if (raw.includes('INSUFFICIENT_STOCK') || raw.includes('Недостаточно'))
         msg = '❌ Недостаточно ингредиентов на складе. Купи их в Рынке → Магазин.'
+      else if (raw.includes('MAX_BATCHES_REACHED') || raw.includes('одновременно'))
+        msg = '❌ Максимум 2 варки одновременно. Дождись окончания текущих.'
       else if (raw.includes('EMPTY_MALTS') || raw.includes('засыпь'))
         msg = '❌ Добавь хотя бы один солод в рецепт.'
       else if (raw.includes('EMPTY_HOPS') || raw.includes('хмелевая'))

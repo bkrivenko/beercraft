@@ -298,10 +298,15 @@ export function HomeScreen({
       <section className="px-4 pt-4">
         <h2 className="text-cream-100 font-bold text-sm mb-3 flex items-center gap-2">
           <span className="text-amber-600">🍺</span> Активные партии
-          {activeBatches.length > 0 && (
-            <span className="bg-amber-600 text-brown-950 text-xs font-bold px-1.5 py-0.5 rounded-full">
-              {activeBatches.length}
-            </span>
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+            activeBatches.length >= 2
+              ? 'bg-red-700 text-cream-100'
+              : 'bg-amber-600 text-brown-950'
+          }`}>
+            {activeBatches.length}/2
+          </span>
+          {activeBatches.length >= 2 && (
+            <span className="text-red-400 text-xs opacity-80">лимит достигнут</span>
           )}
         </h2>
 

@@ -160,15 +160,55 @@ export async function startBatch(
   const yeastIng = await prisma.ingredient.findUnique({ where: { key: yeastKey } })
   const waterIng = await prisma.ingredient.findUnique({ where: { key: waterKey } })
 
+  // Проверяем лимит активных варок
+  const MAX_ACTIVE_BATCHES = 2   // базовый лимит; растёт с оборудованием
+  const activeBatchCount = await (prisma as any).batch.count({
+    where: {
+      brewery_id: breweryId,
+      status: { notIn: ['ready', 'sold', 'discarded'] },
+    },
+  })
+  if (activeBatchCount >= MAX_ACTIVE_BATCHES) {
+    throw new BatchError(
+      `Можно варить одновременно не более ${MAX_ACTIVE_BATCHES} партий. Дождись окончания текущих варок.`,
+      'MAX_BATCHES_REACHED',
+    )
+  }
+
   // Транзакция: списать ингредиенты + создать партию
   const batch = await prisma.$transaction(async (tx: any) => {
-    // Списываем солод со склада
+    // Списываем солод со склада (кг)
     for (const m of malts) {
       const ing = ingredientMap[m.key]
       await tx.inventory.update({
         where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: ing.id } },
         data: { quantity: { decrement: m.amountKg } },
       })
+    }
+
+    // Списываем хмель со склада (граммы → единицы×100г)
+    for (const h of hops) {
+      const ing = ingredientMap[h.key]
+      if (!ing) continue
+      const unitsToDecrement = h.amountG / 100   // переводим г → единицы (100г)
+      await tx.inventory.update({
+        where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: ing.id } },
+        data: { quantity: { decrement: unitsToDecrement } },
+      })
+    }
+
+    // Списываем дрожжи (1 pitch = 1 единица)
+    if (yeastIng) {
+      const yeastInventory = await tx.inventory.findUnique({
+        where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: yeastIng.id } },
+        select: { quantity: true },
+      })
+      if (yeastInventory && Number(yeastInventory.quantity) >= 1) {
+        await tx.inventory.update({
+          where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: yeastIng.id } },
+          data: { quantity: { decrement: 1 } },
+        })
+      }
     }
 
     // Создаём/находим рецепт (snapshot рецепта)

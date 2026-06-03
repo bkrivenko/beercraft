@@ -346,6 +346,9 @@ function FermentingScreen({ batch, scores, onDone }: { batch: Batch; scores: Rec
       <div className="text-center">
         <h2 className="text-cream-100 font-bold text-xl">Варка завершена!</h2>
         <p className="text-amber-400 font-semibold mt-1">{label}</p>
+        <p className="text-cream-200 text-sm opacity-60 mt-1">
+          Пиво уйдёт на склад когда дозреет
+        </p>
       </div>
 
       <div className="w-full bg-brown-900 border border-brown-800 rounded-2xl px-4 py-4 space-y-3">
@@ -378,6 +381,12 @@ function FermentingScreen({ batch, scores, onDone }: { batch: Batch; scores: Rec
         </div>
       )}
 
+      <div className="w-full bg-brown-900 border border-brown-800 rounded-xl px-4 py-3 flex items-center gap-3">
+        <span className="text-xl">💡</span>
+        <p className="text-cream-200 text-xs opacity-70">
+          Когда пиво созреет — оно появится на главном экране. Продай его в <strong className="text-amber-400">Рынке → Продажа</strong> или выполни заказ NPC.
+        </p>
+      </div>
       <button
         className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80"
         onClick={onDone}
