@@ -207,7 +207,8 @@ export async function startBot(): Promise<void> {
     await bot.api.setWebhook(webhookUrl)
     console.log('[bot] webhook set:', webhookUrl)
   } else {
-    // Dev: polling
+    // Dev / polling: сначала удаляем старый webhook чтобы не было конфликта
+    await bot.api.deleteWebhook({ drop_pending_updates: true })
     void bot.start({ drop_pending_updates: true })
     console.log('[bot] polling started')
   }
