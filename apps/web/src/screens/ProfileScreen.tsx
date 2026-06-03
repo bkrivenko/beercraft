@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { api, type PlayerStats } from '../lib/api'
+import { api, type PlayerStats, type InventoryItem } from '../lib/api'
 import { useTelegram } from '../telegram/useTelegram'
 
 function Skeleton({ className }: { className?: string }) {
@@ -114,13 +114,14 @@ function NextUnlocks({ unlocks }: { unlocks: NonNullable<PlayerStats['nextLevelU
 // ── Главный экран Э-8 ─────────────────────────────────────────────────────────
 export function ProfileScreen({ onBack }: { onBack?: () => void }) {
   const { displayName } = useTelegram()
-  const [stats, setStats]     = useState<PlayerStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [stats,     setStats]     = useState<PlayerStats | null>(null)
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState<string | null>(null)
 
   useEffect(() => {
-    api.getStats()
-      .then(setStats)
+    Promise.all([api.getStats(), api.getInventory()])
+      .then(([s, inv]) => { setStats(s); setInventory(inv.items) })
       .catch((e) => {
         const msg = e instanceof Error ? e.message : String(e)
         const status = (e as any).status
@@ -221,6 +222,39 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
             {/* Следующие разблокировки */}
             {stats.nextLevelUnlocks && (
               <NextUnlocks unlocks={stats.nextLevelUnlocks} />
+            )}
+
+            {/* Ингредиенты на складе */}
+            {inventory.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-cream-100 font-bold text-sm flex items-center gap-2">
+                  <span className="text-amber-600">📦</span> Склад ингредиентов
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {inventory.map(item => {
+                    const icon = item.type === 'malt' ? '🌾'
+                      : item.type === 'hop' ? '🌿'
+                      : item.type === 'yeast' ? '🧫'
+                      : item.type === 'water' ? '💧'
+                      : '🍊'
+                    return (
+                      <div key={item.key} className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2.5 flex items-center gap-2">
+                        <span className="text-xl">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-cream-100 text-xs font-semibold truncate">{item.name}</p>
+                          <p className="text-amber-400 text-xs">{item.quantity} {item.unit}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            {inventory.length === 0 && (
+              <div className="bg-brown-900 border border-brown-800 rounded-xl px-4 py-4 text-center">
+                <p className="text-cream-200 text-sm opacity-60">📦 Склад пуст</p>
+                <p className="text-cream-200 text-xs opacity-40 mt-1">Купи ингредиенты в Рынке → Магазин</p>
+              </div>
             )}
 
             {/* Валюта + репутация */}

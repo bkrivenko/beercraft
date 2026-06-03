@@ -43,10 +43,11 @@ function BottomNav({ current, onChange }: { current: Screen; onChange: (s: Scree
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen,   setScreen]   = useState<Screen>('home')
-  const [batchId,  setBatchId]  = useState<string | null>(null)
-  const [brewError, setBrewError] = useState<string | null>(null)
-  const [brewing,   setBrewing]   = useState(false)
+  const [screen,        setScreen]        = useState<Screen>('home')
+  const [batchId,       setBatchId]       = useState<string | null>(null)
+  const [brewError,     setBrewError]     = useState<string | null>(null)
+  const [brewing,       setBrewing]       = useState(false)
+  const [recipeStyleKey, setRecipeStyleKey] = useState<string | undefined>(undefined)
 
   const showNav = !['recipe', 'brewing'].includes(screen)
 
@@ -64,32 +65,42 @@ export default function App() {
       setScreen('brewing')
     } catch (e) {
       const raw = e instanceof Error ? e.message : 'Ошибка запуска варки'
-      // Переводим типичные серверные ошибки в понятный текст
       let msg = raw
       if (raw.includes('INSUFFICIENT_STOCK') || raw.includes('Недостаточно'))
         msg = '❌ Недостаточно ингредиентов на складе. Купи их в Рынке → Магазин.'
-      else if (raw.includes('EMPTY_MALTS') || raw.includes('солод'))
+      else if (raw.includes('EMPTY_MALTS') || raw.includes('засыпь'))
         msg = '❌ Добавь хотя бы один солод в рецепт.'
-      else if (raw.includes('EMPTY_HOPS') || raw.includes('хмель'))
+      else if (raw.includes('EMPTY_HOPS') || raw.includes('хмелевая'))
         msg = '❌ Добавь хотя бы один хмель в рецепт.'
       else if (raw.includes('401') || raw.includes('initData'))
         msg = '❌ Ошибка авторизации. Перезапусти приложение в Telegram.'
       else if (raw.includes('500') || raw.includes('Internal'))
         msg = '❌ Ошибка сервера. Попробуй ещё раз через несколько секунд.'
       setBrewError(msg)
+      setScreen('home')
     } finally {
       setBrewing(false)
     }
+  }, [])
+
+  // Открыть рецепт с предустановленным стилем (из заказа)
+  const handleStartBrew = useCallback((styleKey?: string) => {
+    setBrewError(null)
+    setRecipeStyleKey(styleKey)
+    setScreen('recipe')
   }, [])
 
   return (
     <div className="pb-16">
       {screen === 'home' && (
         <>
-          <HomeScreen onBrew={() => { setBrewError(null); setScreen('recipe') }} />
+          <HomeScreen
+            onBrew={handleStartBrew}
+            onGoMarket={() => setScreen('market')}
+          />
           {brewError && (
-            <div className="fixed top-4 left-4 right-4 bg-red-950 border border-red-700 rounded-xl px-4 py-3 z-50">
-              <p className="text-red-300 text-sm">{brewError}</p>
+            <div className="fixed top-4 left-4 right-4 bg-red-950 border border-red-700 rounded-xl px-4 py-3 z-50 shadow-xl">
+              <p className="text-red-300 text-sm font-semibold">{brewError}</p>
               <button
                 className="text-red-400 text-xs underline mt-1"
                 onClick={() => setBrewError(null)}
@@ -107,6 +118,7 @@ export default function App() {
           onSave={() => setScreen('home')}
           onBrew={handleBrew}
           brewing={brewing}
+          initialStyleKey={recipeStyleKey}
         />
       )}
 

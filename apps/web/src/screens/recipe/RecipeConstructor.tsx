@@ -386,11 +386,12 @@ interface RecipeConstructorProps {
   onSave?: () => void
   onBack?: () => void
   brewing?: boolean
+  initialStyleKey?: string
 }
 
-export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false }: RecipeConstructorProps) {
+export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false, initialStyleKey }: RecipeConstructorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('malt')
-  const [targetStyleKey, setTargetStyleKey] = useState<string>('ipa')
+  const [targetStyleKey, setTargetStyleKey] = useState<string>(initialStyleKey ?? 'ipa')
 
   // Рецепт
   const [malts,        setMalts]        = useState<MaltEntry[]>([])
