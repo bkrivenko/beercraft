@@ -122,15 +122,14 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
     api.getStats()
       .then(setStats)
       .catch((e) => {
-        // 404 означает что пользователь ещё не создан (нет инициализации через /me)
-        // или сервер недоступен — показываем понятное сообщение
-        const msg = e instanceof Error ? e.message : 'Ошибка'
-        if (msg.includes('404') || msg.includes('not found')) {
-          setError('Профиль не найден. Сначала зайдите на главный экран чтобы создать аккаунт.')
+        const msg = e instanceof Error ? e.message : String(e)
+        const status = (e as any).status
+        if (status === 401 || msg.includes('401') || msg.includes('initData')) {
+          setError('Ошибка авторизации Telegram. Попробуйте перезапустить приложение.')
         } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-          setError('Нет соединения с сервером. Проверьте интернет-подключение.')
+          setError('Нет соединения с сервером.')
         } else {
-          setError(msg)
+          setError(`Ошибка загрузки профиля: ${msg}`)
         }
       })
       .finally(() => setLoading(false))
@@ -160,6 +159,10 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
           <div className="flex flex-col items-center py-12 space-y-4 px-4 text-center">
             <span className="text-4xl">😕</span>
             <p className="text-cream-200 text-sm">{error}</p>
+            <button
+              className="bg-amber-600 text-brown-950 font-bold text-sm px-5 py-2.5 rounded-xl active:opacity-80"
+              onClick={() => { setError(null); setLoading(true); api.getStats().then(setStats).catch((e) => setError(e instanceof Error ? e.message : String(e))).finally(() => setLoading(false)) }}
+            >Повторить</button>
             <button
               className="border border-brown-700 text-cream-100 text-sm px-5 py-2.5 rounded-xl active:opacity-70"
               onClick={onBack}
