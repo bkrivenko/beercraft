@@ -302,17 +302,13 @@ export async function completeStage(
     )
   }
 
-  const now      = new Date()
-  const nextStatus = batch.status === 'mashing' ? 'boiling' : 'fermenting'
+  const now = new Date()
+  // Клиент присылает accuracy для всех трёх этапов сразу (mash + hops + chill)
+  // → переходим сразу в fermenting, минуя промежуточный boiling
+  const nextStatus = 'fermenting'
 
-  // При переходе в fermenting — считаем финальные параметры
-  // ready_at для промежуточного перехода (mashing→boiling = 5 мин);
-  // для boiling→fermenting переписывается ниже на реальную длительность брожения
   let updateData: Record<string, unknown> = {
     status:   nextStatus,
-    ready_at: nextStatus === 'boiling'
-      ? new Date(now.getTime() + STAGE_DURATION.boiling * 1000)
-      : null,
     accuracy: safeAcc,
   }
 
@@ -445,6 +441,23 @@ export async function completeStage(
 export async function getBatches(breweryId: bigint) {
   // Автоматически продвигаем готовые таймеры перед отдачей
   const now = new Date()
+
+  // mashing/boiling с истёкшим таймером → fermenting с дефолтной точностью
+  // (партия застряла если игрок не нажал completeStage вовремя)
+  const stuckBatches = await (prisma as any).batch.findMany({
+    where: {
+      brewery_id: breweryId,
+      status:     { in: ['mashing', 'boiling'] },
+      ready_at:   { lte: now },
+    },
+    include: { recipe: true, style: true },
+  })
+  for (const b of stuckBatches) {
+    try {
+      // Вызываем completeStage с дефолтной точностью 0.7
+      await completeStage(b.id, breweryId, { mash: 0.7, hops: 0.7, chill: 0.7 })
+    } catch { /* пропускаем если ошибка */ }
+  }
 
   // fermenting → conditioning
   await prisma.batch.updateMany({
