@@ -442,22 +442,21 @@ export async function getBatches(breweryId: bigint) {
   // Автоматически продвигаем готовые таймеры перед отдачей
   const now = new Date()
 
-  // mashing/boiling с истёкшим таймером → fermenting с дефолтной точностью
+  // mashing/boiling с истёкшим таймером → fermenting напрямую
   // (партия застряла если игрок не нажал completeStage вовремя)
-  const stuckBatches = await (prisma as any).batch.findMany({
+  await (prisma as any).batch.updateMany({
     where: {
       brewery_id: breweryId,
       status:     { in: ['mashing', 'boiling'] },
       ready_at:   { lte: now },
     },
-    include: { recipe: true, style: true },
+    data: {
+      status:   'fermenting',
+      quality:  60,   // дефолтное качество для авто-завершения
+      ready_at: new Date(now.getTime() + STAGE_DURATION.fermenting * 1000),
+      accuracy: { mash: 0.7, hops: 0.7, chill: 0.7 },
+    },
   })
-  for (const b of stuckBatches) {
-    try {
-      // Вызываем completeStage с дефолтной точностью 0.7
-      await completeStage(b.id, breweryId, { mash: 0.7, hops: 0.7, chill: 0.7 })
-    } catch { /* пропускаем если ошибка */ }
-  }
 
   // fermenting → conditioning
   await prisma.batch.updateMany({

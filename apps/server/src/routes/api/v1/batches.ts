@@ -154,4 +154,29 @@ export async function batchRoutes(app: FastifyInstance) {
       }
     },
   )
+
+  // ── POST /api/v1/batches/rescue ────────────────────────────────────────────
+  // Форсирует продвижение застрявших партий (mashing/boiling → fermenting)
+  app.post('/batches/rescue', async (request, reply) => {
+    const user = await prisma.user.findUnique({
+      where:  { telegram_id: BigInt(request.telegramUser.id) },
+      select: { brewery: { select: { id: true } } },
+    })
+    if (!user?.brewery) return reply.code(404).send({ error: 'Brewery not found' })
+
+    const now = new Date()
+    const result = await (prisma as any).batch.updateMany({
+      where: {
+        brewery_id: user.brewery.id,
+        status:     { in: ['mashing', 'boiling'] },
+      },
+      data: {
+        status:   'fermenting',
+        quality:  60,
+        ready_at: new Date(now.getTime() + 4 * 60 * 60 * 1000),
+        accuracy: { mash: 0.7, hops: 0.7, chill: 0.7 },
+      },
+    })
+    return reply.send({ rescued: result.count })
+  })
 }
