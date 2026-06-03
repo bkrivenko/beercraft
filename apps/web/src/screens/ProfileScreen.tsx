@@ -231,7 +231,7 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
                   <span className="text-amber-600">📦</span> Склад ингредиентов
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
-                  {inventory.map(item => {
+                  {inventory.filter(item => item.type !== 'water').map(item => {
                     const icon = item.type === 'malt' ? '🌾'
                       : item.type === 'hop' ? '🌿'
                       : item.type === 'yeast' ? '🧫'

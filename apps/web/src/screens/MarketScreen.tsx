@@ -384,11 +384,14 @@ function ShopTab() {
   }
 
   // Группируем по типу
-  const grouped = ingredients.reduce<Record<string, Ingredient[]>>((acc, i) => {
-    const t = i.type ?? 'other';
-    (acc[t] = acc[t] ?? []).push(i)
-    return acc
-  }, {})
+  // Вода безлимитная — не показываем в магазине
+  const grouped = ingredients
+    .filter(i => i.type !== 'water')
+    .reduce<Record<string, Ingredient[]>>((acc, i) => {
+      const t = i.type ?? 'other';
+      (acc[t] = acc[t] ?? []).push(i)
+      return acc
+    }, {})
 
   async function handleBuy(key: string, price: number) {
     const amount = qty[key] ?? 1
@@ -431,7 +434,7 @@ function ShopTab() {
         <div>
           <h3 className="text-cream-200 text-xs font-semibold uppercase tracking-wider mb-2">📦 На складе</h3>
           <div className="grid grid-cols-2 gap-2">
-            {inventory.map(item => (
+            {inventory.filter(item => item.type !== 'water').map(item => (
               <div key={item.key} className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2.5 flex items-center gap-2">
                 <span className="text-lg">{TYPE_ICON[item.type ?? ''] ?? '📦'}</span>
                 <div className="flex-1 min-w-0">
