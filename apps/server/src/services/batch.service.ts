@@ -359,10 +359,14 @@ export async function completeStage(
     }
 
     // Начисляем XP + проверяем левел-ап
-    const user = await prisma.user.findUnique({
-      where: { brewery: { id: breweryId } },
+    const brewery = await (prisma as any).brewery.findUnique({
+      where: { id: breweryId },
+      select: { owner_id: true },
+    })
+    const user = brewery ? await prisma.user.findUnique({
+      where: { id: brewery.owner_id },
       select: { id: true, xp: true, level: true },
-    }) as any
+    }) as any : null
 
     if (user) {
       const xpGain = calcBrewXP(quality, volumeL, false)
