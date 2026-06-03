@@ -10,6 +10,8 @@ import { ingredientRoutes } from './routes/api/v1/ingredients.js'
 import { batchRoutes }      from './routes/api/v1/batches.js'
 import { marketRoutes }     from './routes/api/v1/market.js'
 import { matchWsRoutes }    from './routes/ws/match.js'
+import { matchRoutes }      from './routes/api/v1/match.js'
+import { cancelStaleMatches } from './services/match.service.js'
 
 const app = Fastify({ logger: true })
 
@@ -22,9 +24,13 @@ await app.register(meRoutes,         { prefix: '/api/v1' })
 await app.register(ingredientRoutes, { prefix: '/api/v1' })
 await app.register(batchRoutes,      { prefix: '/api/v1' })
 await app.register(marketRoutes,     { prefix: '/api/v1' })
+await app.register(matchRoutes,      { prefix: '/api/v1' })
 
 // ── WebSocket Routes ──────────────────────────────────────────────────────────
 await app.register(matchWsRoutes)
+
+// ── Воркер отмены зависших матчей (каждые 5 мин) ─────────────────────────────
+setInterval(() => { void cancelStaleMatches() }, 5 * 60 * 1000)
 
 // ── Уведомления: воркер готовности партий ─────────────────────────────────────
 startNotificationWorker()
