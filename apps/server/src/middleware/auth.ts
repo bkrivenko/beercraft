@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import crypto from 'node:crypto'
+import { getOrCreateUser } from '../services/user.service.js'
 
 // Telegram initData validation per official docs:
 // https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
@@ -69,4 +70,7 @@ export async function authMiddleware(
   } catch {
     return reply.code(401).send({ error: 'Invalid Telegram initData' })
   }
+
+  // Гарантируем что пользователь существует в БД при любом запросе
+  await getOrCreateUser(request.telegramUser)
 }
