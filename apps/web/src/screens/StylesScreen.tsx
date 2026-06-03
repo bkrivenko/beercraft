@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { srmToHex } from '../lib/brewCalc'
+import { getBeerImage } from '../components/BeerCard'
 import { api } from '../lib/api'
 import {
   BEER_STYLES,
@@ -45,6 +46,7 @@ function StyleCard({
   onSelect: () => void
 }) {
   const color  = style.srm ? srmToHex((style.srm[0] + style.srm[1]) / 2) : '#4e2a0e'
+  const imgSrc = getBeerImage(style.key)
 
   return (
     <button
@@ -56,12 +58,18 @@ function StyleCard({
       onClick={onSelect}
     >
       <div className="flex items-center gap-3 p-3 bg-brown-900">
-        {/* Цвет пива */}
-        <div
-          className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center text-xl"
-          style={{ background: locked ? '#2a1a0a' : color }}
-        >
-          {locked ? '🔒' : '🍺'}
+        {/* Картинка или цвет пива */}
+        <div className="w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden relative">
+          {imgSrc && !locked ? (
+            <img src={imgSrc} alt={style.name} className="w-full h-full object-cover" />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center text-xl"
+              style={{ background: locked ? '#2a1a0a' : color }}
+            >
+              {locked ? '🔒' : '🍺'}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -104,6 +112,7 @@ function StyleSheet({
 }) {
   const recipe = STYLE_RECIPES[style.key]
   const color  = style.srm ? srmToHex((style.srm[0] + style.srm[1]) / 2) : '#4e2a0e'
+  const imgSrc = getBeerImage(style.key)
 
   return (
     <>
@@ -112,7 +121,21 @@ function StyleSheet({
 
       {/* Лист */}
       <div className="fixed bottom-0 left-0 right-0 bg-brown-950 rounded-t-2xl z-50 max-h-[90vh] overflow-y-auto">
-        {/* Шапка с цветом */}
+        {/* Картинка-шапка на всю ширину */}
+        {imgSrc && (
+          <div className="relative h-40 overflow-hidden rounded-t-2xl">
+            <img src={imgSrc} alt={style.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-brown-950 via-brown-950/40 to-transparent" />
+            <div className="absolute bottom-3 left-5">
+              <p className="text-cream-200 text-xs opacity-70">{style.family}</p>
+              <h2 className="text-cream-100 font-bold text-xl">{style.name}</h2>
+            </div>
+            <button className="absolute top-3 right-3 text-cream-200 opacity-60 text-2xl leading-none bg-brown-950/50 rounded-full w-8 h-8 flex items-center justify-center" onClick={onClose}>×</button>
+          </div>
+        )}
+
+        {/* Шапка без картинки */}
+        {!imgSrc && (
         <div
           className="px-5 pt-5 pb-4 flex items-start gap-4"
           style={{ background: `linear-gradient(135deg, ${color}22, transparent)` }}
@@ -129,8 +152,13 @@ function StyleSheet({
           </div>
           <button className="text-cream-200 opacity-40 text-2xl leading-none" onClick={onClose}>×</button>
         </div>
+        )}
 
         <div className="px-5 pb-8 space-y-5">
+          {/* Сложность под картинкой */}
+          {imgSrc && (
+            <p className="text-amber-400 text-xs">{DIFFICULTY_LABEL[style.difficulty] ?? ''}</p>
+          )}
           {/* Целевые параметры */}
           <div>
             <p className="text-cream-200 text-xs font-semibold uppercase tracking-wider opacity-50 mb-2">

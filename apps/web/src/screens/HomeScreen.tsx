@@ -324,6 +324,7 @@ export function HomeScreen({
                 id={b.id}
                 name={b.styleName ?? `Партия ${b.id.slice(-4)}`}
                 styleName={b.styleName}
+                styleKey={(b as any).styleKey ?? null}
                 ibu={b.ibu}
                 abv={b.abv}
                 quality={b.quality}

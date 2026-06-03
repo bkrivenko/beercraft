@@ -5,6 +5,7 @@ export interface BeerCardProps {
   id: string
   name: string
   styleName: string | null
+  styleKey?: string | null
   ibu: number | null
   abv: number | null
   quality: number | null
@@ -13,6 +14,12 @@ export interface BeerCardProps {
   readyAt: string | null
   startedAt?: string | null
   onClick?: () => void
+}
+
+// Картинка для стиля пива (из /assets/beer/)
+export function getBeerImage(styleKey?: string | null): string | null {
+  if (!styleKey) return null
+  return `/assets/beer/beer_${styleKey}.jpg`
 }
 
 // ── Порядок и длительность этапов ────────────────────────────────────────────
@@ -115,14 +122,14 @@ function StagePipeline({ status }: { status: BeerCardProps['status'] }) {
 // ── Главный компонент ─────────────────────────────────────────────────────────
 
 export function BeerCard({
-  name, styleName, ibu, abv, quality, srm,
+  name, styleName, styleKey, ibu, abv, quality, srm,
   status, readyAt, onClick,
 }: BeerCardProps) {
-  const seconds  = useCountdown(readyAt)
-  const isActive = ['mashing', 'boiling', 'fermenting', 'conditioning'].includes(status)
-  const isReady  = status === 'ready'
-
+  const seconds   = useCountdown(readyAt)
+  const isActive  = ['mashing', 'boiling', 'fermenting', 'conditioning'].includes(status)
+  const isReady   = status === 'ready'
   const beerColor = srm != null ? srmToHex(srm) : '#3b1e0a'
+  const imgSrc    = getBeerImage(styleKey)
 
   return (
     <article
@@ -133,25 +140,42 @@ export function BeerCard({
       } ${onClick ? 'cursor-pointer active:opacity-80' : ''}`}
       onClick={onClick}
     >
-      {/* Цветной блок */}
-      <div
-        className="relative h-16 flex items-center justify-center overflow-hidden"
-        style={{ background: isReady ? beerColor : `${beerColor}88` }}
-      >
+      {/* Картинка или цветной блок */}
+      <div className="relative h-28 overflow-hidden">
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={styleName ?? name}
+            className={`w-full h-full object-cover transition-all ${
+              isActive ? 'opacity-60 grayscale-[30%]' : isReady ? 'opacity-100' : 'opacity-80'
+            }`}
+          />
+        ) : (
+          <div
+            className="w-full h-full"
+            style={{ background: isReady ? beerColor : `${beerColor}88` }}
+          />
+        )}
+
+        {/* Затемнение снизу для читаемости текста */}
+        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-brown-900/80 to-transparent" />
+
         {/* Анимация для активных */}
         {isActive && (
           <div className="absolute inset-0 animate-pulse opacity-10 bg-white" />
         )}
 
-        {/* Иконка статуса */}
-        <span className={`text-3xl select-none z-10 ${isActive ? 'animate-bounce' : ''}`}
-          style={{ animationDuration: '2s' }}>
-          {isReady ? '🍺' : STATUS_ICON[status]}
-        </span>
+        {/* Иконка статуса поверх */}
+        {isActive && (
+          <span className="absolute top-2 left-2 text-2xl animate-bounce"
+            style={{ animationDuration: '2s' }}>
+            {STATUS_ICON[status]}
+          </span>
+        )}
 
         {/* Бейдж «ГОТОВО» */}
         {isReady && (
-          <div className="absolute top-1.5 right-1.5 bg-amber-500 text-brown-950 text-xs font-black px-1.5 py-0.5 rounded-full">
+          <div className="absolute top-2 right-2 bg-amber-500 text-brown-950 text-xs font-black px-2 py-0.5 rounded-full shadow">
             ГОТОВО
           </div>
         )}
