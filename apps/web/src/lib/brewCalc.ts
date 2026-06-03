@@ -42,13 +42,35 @@ export interface HopEntry {
   timing: HopTiming
 }
 
+// Водный профиль влияет на воспринимаемую горечь (IBU)
+// Зеркалит logику сервера (bonusWater в calcQuality)
+const WATER_IBU_MULT: Record<string, number> = {
+  hoppy:     1.15,   // сульфатная — усиливает горечь
+  balanced:  1.00,
+  soft:      0.95,
+  malty:     0.87,   // хлоридная — смягчает горечь
+  carbonate: 1.02,
+}
+
+// Температура брожения влияет на аттенюацию дрожжей
+// (слишком холодно — брожение хуже, слишком жарко — перебор)
+function fermentTempAttFactor(tempC: number, yeastTmin: number, yeastTmax: number): number {
+  if (tempC < yeastTmin) return 0.90   // холоднее оптимума — неполное брожение
+  if (tempC > yeastTmax) return 0.95   // жарче оптимума — стресс дрожжей
+  return 1.00
+}
+
 export interface RecipeInput {
-  malts:        MaltEntry[]
-  hops:         HopEntry[]
+  malts:            MaltEntry[]
+  hops:             HopEntry[]
   yeastAttenuation: number   // доля: 0.75
-  mashTempC:    number       // °C
-  volumeL:      number       // литры
-  mashEff?:     number       // 0–1, дефолт 0.80
+  yeastTempMin?:    number   // мин. °C дрожжей
+  yeastTempMax?:    number   // макс. °C дрожжей
+  mashTempC:        number   // °C
+  fermentTempC?:    number   // °C
+  waterKey?:        string   // ключ профиля воды
+  volumeL:          number   // литры
+  mashEff?:         number   // 0–1, дефолт 0.80
 }
 
 export interface BrewPreview {
@@ -121,25 +143,38 @@ export function srmToHex(srm: number): string {
 // ── Главная функция ───────────────────────────────────────────────────────────
 
 export function calculatePreview(recipe: RecipeInput): BrewPreview {
-  const mashEff = recipe.mashEff ?? MASH_EFF_DEFAULT
-  const volumeL = recipe.volumeL > 0 ? recipe.volumeL : 20
+  const mashEff    = recipe.mashEff ?? MASH_EFF_DEFAULT
+  const volumeL    = recipe.volumeL > 0 ? recipe.volumeL : 20
+  const fermentTempC = recipe.fermentTempC ?? 20
+  const waterKey   = recipe.waterKey ?? 'balanced'
 
   const { gp, og } = calcOG(recipe.malts, volumeL, mashEff)
+
+  // Температура брожения корректирует аттенюацию дрожжей
+  const tMin = recipe.yeastTempMin ?? 15
+  const tMax = recipe.yeastTempMax ?? 25
+  const attFactor = fermentTempAttFactor(fermentTempC, tMin, tMax)
+  const effAttenuation = recipe.yeastAttenuation * attFactor
+
   const fg  = recipe.malts.length > 0
-    ? calcFG(og, recipe.yeastAttenuation, recipe.mashTempC)
+    ? calcFG(og, effAttenuation, recipe.mashTempC)
     : 1.000
   const abv = calcABV(og, fg)
-  const ibu = calcIBU(recipe.hops, og, volumeL)
-  const srm = calcSRM(recipe.malts, volumeL)
+
+  // Вода влияет на воспринимаемую горечь
+  const waterMult = WATER_IBU_MULT[waterKey] ?? 1.0
+  const ibu = calcIBU(recipe.hops, og, volumeL) * waterMult
+
+  const srm  = calcSRM(recipe.malts, volumeL)
   const bugu = gp > 0 ? ibu / gp : 0
 
   return {
-    og:  Math.round(og * 1000) / 1000,
-    fg:  Math.round(fg * 1000) / 1000,
-    abv: Math.round(abv * 10) / 10,
-    ibu: Math.round(ibu),
-    srm: Math.round(srm * 10) / 10,
-    gp:  Math.round(gp * 10) / 10,
+    og:   Math.round(og * 1000) / 1000,
+    fg:   Math.round(fg * 1000) / 1000,
+    abv:  Math.round(abv * 10) / 10,
+    ibu:  Math.round(ibu),
+    srm:  Math.round(srm * 10) / 10,
+    gp:   Math.round(gp * 10) / 10,
     bugu: Math.round(bugu * 100) / 100,
   }
 }

@@ -263,39 +263,55 @@ function YeastTab({
   yeastKey,
   mashTempC,
   fermentTempC,
+  stockMap,
   onYeastChange,
   onMashTempChange,
   onFermentTempChange,
 }: {
-  yeastKey: string
-  mashTempC: number
+  yeastKey:    string
+  mashTempC:   number
   fermentTempC: number
-  onYeastChange: (key: string, attenuation: number) => void
-  onMashTempChange: (t: number) => void
-  onFermentTempChange: (t: number) => void
+  stockMap:    Record<string, number>
+  onYeastChange:      (key: string, att: number, tmin: number, tmax: number) => void
+  onMashTempChange:   (t: number) => void
+  onFermentTempChange:(t: number) => void
 }) {
+  const selectedYeast = YEASTS.find((y) => y.key === yeastKey)
+  const yeastTmin = selectedYeast ? (selectedYeast.params.temp_min as number) : 15
+  const yeastTmax = selectedYeast ? (selectedYeast.params.temp_max as number) : 25
+  const fermentOk = fermentTempC >= yeastTmin && fermentTempC <= yeastTmax
+
   return (
     <Section title="Дрожжи и процесс">
       <div className="space-y-3">
-        {/* Выбор дрожжей */}
+        {/* Выбор дрожжей — только те что есть на складе */}
         <div className="space-y-2">
           {YEASTS.map((y) => {
-            const att = y.params.attenuation as number
-            const tmin = y.params.temp_min as number
-            const tmax = y.params.temp_max as number
+            const att      = y.params.attenuation as number
+            const tmin     = y.params.temp_min as number
+            const tmax     = y.params.temp_max as number
+            const inStock  = (stockMap[y.key] ?? 0) > 0
+            const selected = yeastKey === y.key
+            if (!inStock && !selected) return null  // скрываем недоступные
             return (
               <button
                 key={y.key}
-                className={`w-full text-left bg-brown-900 border rounded-xl px-3 py-2 transition-colors ${
-                  yeastKey === y.key
-                    ? 'border-amber-600'
-                    : 'border-brown-800 active:opacity-70'
+                disabled={!inStock}
+                className={`w-full text-left border rounded-xl px-3 py-2 transition-colors ${
+                  selected
+                    ? 'bg-amber-900/30 border-amber-600'
+                    : inStock
+                      ? 'bg-brown-900 border-brown-800 active:opacity-70'
+                      : 'bg-brown-900/40 border-brown-800/40 opacity-40 cursor-not-allowed'
                 }`}
-                onClick={() => onYeastChange(y.key, att)}
+                onClick={() => inStock && onYeastChange(y.key, att, tmin, tmax)}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-cream-100 text-sm font-semibold">{y.name}</span>
-                  {yeastKey === y.key && <span className="text-amber-600 text-xs">✓</span>}
+                  <div className="flex items-center gap-1">
+                    {!inStock && <span className="text-red-400 text-xs">нет на складе</span>}
+                    {selected  && <span className="text-amber-600 text-xs">✓</span>}
+                  </div>
                 </div>
                 <div className="text-amber-400 text-xs opacity-70">
                   Атт. {Math.round(att * 100)}% · {tmin}–{tmax}°C
@@ -304,6 +320,11 @@ function YeastTab({
               </button>
             )
           })}
+          {YEASTS.every((y) => (stockMap[y.key] ?? 0) === 0) && (
+            <p className="text-red-400 text-xs text-center py-2">
+              Нет дрожжей на складе — купи в Рынке → Магазин
+            </p>
+          )}
         </div>
 
         {/* Температура затирания */}
@@ -324,10 +345,13 @@ function YeastTab({
         </div>
 
         {/* Температура брожения */}
-        <div className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2">
-          <div className="flex justify-between text-sm text-cream-100 mb-2">
+        <div className={`border rounded-xl px-3 py-2 ${fermentOk ? 'bg-brown-900 border-brown-800' : 'bg-red-950/30 border-red-900'}`}>
+          <div className="flex justify-between text-sm text-cream-100 mb-1">
             <span>Брожение</span>
-            <span className="text-amber-400 font-bold">{fermentTempC}°C</span>
+            <div className="flex items-center gap-2">
+              <span className="text-cream-200 text-xs opacity-50">оптим. {yeastTmin}–{yeastTmax}°C</span>
+              <span className={`font-bold ${fermentOk ? 'text-amber-400' : 'text-red-400'}`}>{fermentTempC}°C</span>
+            </div>
           </div>
           <input
             type="range" min={8} max={28} step={1}
@@ -335,9 +359,11 @@ function YeastTab({
             onChange={(e) => onFermentTempChange(Number(e.target.value))}
             className="w-full accent-amber-600"
           />
-          <div className="flex justify-between text-xs text-cream-200 opacity-40 mt-1">
-            <span>8°C (лагер)</span><span>28°C (бельгийский)</span>
-          </div>
+          {!fermentOk && (
+            <p className="text-red-400 text-xs mt-1">
+              ⚠️ Вне оптимального диапазона дрожжей — ухудшит брожение
+            </p>
+          )}
         </div>
       </div>
     </Section>
@@ -447,10 +473,12 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
   const [hops,         setHops]         = useState<HopEntry[]>([])
   const [yeastKey,     setYeastKey]     = useState('us05')
   const [yeastAtt,     setYeastAtt]     = useState(0.77)
+  const [yeastTempMin, setYeastTempMin] = useState(15)
+  const [yeastTempMax, setYeastTempMax] = useState(24)
   const [waterKey,     setWaterKey]     = useState('hoppy')
   const [mashTempC,    setMashTempC]    = useState(66)
   const [fermentTempC, setFermentTempC] = useState(19)
-  const volumeL = 20 // базовый объём (в будущем — слайдер)
+  const volumeL = 20
 
   // Только разблокированные стили
   const availableStyles = useMemo(
@@ -462,8 +490,14 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
 
   // Живой пересчёт — только клиент, без запросов к серверу
   const preview = useMemo(
-    () => calculatePreview({ malts, hops, yeastAttenuation: yeastAtt, mashTempC, volumeL }),
-    [malts, hops, yeastAtt, mashTempC, volumeL],
+    () => calculatePreview({
+      malts, hops,
+      yeastAttenuation: yeastAtt,
+      yeastTempMin, yeastTempMax,
+      mashTempC, fermentTempC,
+      waterKey, volumeL,
+    }),
+    [malts, hops, yeastAtt, yeastTempMin, yeastTempMax, mashTempC, fermentTempC, waterKey, volumeL],
   )
 
   // Простой styleMatch по диапазонам (приближение для клиентского превью)
@@ -479,9 +513,11 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
     return checks.length > 0 ? Math.round(checks.reduce((a, b) => a + b, 0) / checks.length) : 0
   }, [preview, targetStyle])
 
-  const handleYeastChange = useCallback((key: string, att: number) => {
+  const handleYeastChange = useCallback((key: string, att: number, tmin: number, tmax: number) => {
     setYeastKey(key)
     setYeastAtt(att)
+    setYeastTempMin(tmin)
+    setYeastTempMax(tmax)
   }, [])
 
   const styleRange = targetStyle
@@ -556,6 +592,7 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
             yeastKey={yeastKey}
             mashTempC={mashTempC}
             fermentTempC={fermentTempC}
+            stockMap={stockMap}
             onYeastChange={handleYeastChange}
             onMashTempChange={setMashTempC}
             onFermentTempChange={setFermentTempC}
