@@ -10,21 +10,22 @@ const STARTER_INGREDIENTS: Array<{ key: string; quantity: number }> = [
 const STARTER_COINS = 500
 
 // ── Выдать стартовый набор пивоварне ─────────────────────────────────────────
-// Идемпотентна: можно вызывать много раз — не дублирует монеты и ингредиенты
+// Выдаётся ОДИН РАЗ: проверяем флаг starter_pack_given в БД
 export async function giveStarterPack(userId: bigint, breweryId: bigint): Promise<void> {
-  // Монеты — даём только если баланс = 0
+  // Проверяем флаг — если уже выдавали, выходим
   const user = await (prisma as any).user.findUnique({
     where:  { id: userId },
-    select: { soft_currency: true },
+    select: { starter_pack_given: true },
   })
-  if (user && user.soft_currency === 0) {
-    await (prisma as any).user.update({
-      where: { id: userId },
-      data:  { soft_currency: { increment: STARTER_COINS } },
-    })
-  }
+  if (!user || user.starter_pack_given) return
 
-  // Ингредиенты — upsert: создаём если нет, не трогаем если уже есть
+  // Ставим флаг сразу (до выдачи) — защита от двойной выдачи при гонке
+  await (prisma as any).user.update({
+    where: { id: userId },
+    data:  { starter_pack_given: true, soft_currency: { increment: STARTER_COINS } },
+  })
+
+  // Ингредиенты
   for (const { key, quantity } of STARTER_INGREDIENTS) {
     const ingredient = await (prisma as any).ingredient.findUnique({
       where: { key },
@@ -39,12 +40,8 @@ export async function giveStarterPack(userId: bigint, breweryId: bigint): Promis
           ingredient_id: ingredient.id,
         },
       },
-      create: {
-        brewery_id:    breweryId,
-        ingredient_id: ingredient.id,
-        quantity,
-      },
-      update: {},   // уже есть — не трогаем
+      create:  { brewery_id: breweryId, ingredient_id: ingredient.id, quantity },
+      update:  { quantity: { increment: quantity } },
     })
   }
 }

@@ -100,7 +100,8 @@ model User {
   premium_currency Int       @default(0)
   reputation       Int       @default(0)
   locale           String    @default("ru")
-  age_confirmed    Boolean   @default(false)
+  age_confirmed       Boolean   @default(false)
+  starter_pack_given  Boolean   @default(false)
   created_at       DateTime  @default(now()) @db.Timestamptz()
   last_seen_at     DateTime? @db.Timestamptz()
 
