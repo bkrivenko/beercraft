@@ -212,10 +212,12 @@ export async function startBatch(
     }
 
     // Создаём/находим рецепт (snapshot рецепта)
+    // Имя уникально по [author_id, name, version] — добавляем timestamp чтобы не дублировать
+    const uniqueName = `${payload.name} #${Date.now()}`
     const recipe = await tx.recipe.create({
       data: {
         author_id:       userId,
-        name:            payload.name,
+        name:            uniqueName,
         target_style_id: beerStyle?.id ?? null,
         malt_bill:       malts,
         hop_schedule:    hops,
