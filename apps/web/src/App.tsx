@@ -115,7 +115,6 @@ export default function App() {
       {screen === 'recipe' && (
         <RecipeConstructor
           onBack={() => setScreen('home')}
-          onSave={() => setScreen('home')}
           onBrew={handleBrew}
           brewing={brewing}
           initialStyleKey={recipeStyleKey}

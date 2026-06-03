@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { api } from '../../lib/api'
 import { ParamPanel } from '../../components/ParamPanel'
 import {
   calculatePreview,
@@ -71,9 +72,11 @@ function AmountControl({
 function MaltTab({
   malts,
   onChange,
+  stockMap,
 }: {
-  malts: MaltEntry[]
+  malts:    MaltEntry[]
   onChange: (malts: MaltEntry[]) => void
+  stockMap: Record<string, number>
 }) {
   const setAmount = (key: string, amountKg: number) => {
     if (amountKg <= 0) {
@@ -99,21 +102,38 @@ function MaltTab({
     <Section title="Солод">
       <div className="space-y-2">
         {MALTS.map((ing) => {
-          const entry = malts.find((m) => m.key === ing.key)
+          const entry   = malts.find((m) => m.key === ing.key)
+          const inStock = stockMap[ing.key] ?? 0
+          const hasStock = inStock > 0
           return (
-            <div key={ing.key} className="flex items-center justify-between bg-brown-900 border border-brown-800 rounded-xl px-3 py-2">
-              <div>
+            <div
+              key={ing.key}
+              className={`flex items-center justify-between border rounded-xl px-3 py-2 ${
+                hasStock
+                  ? 'bg-brown-900 border-brown-800'
+                  : 'bg-brown-900/40 border-brown-800/40 opacity-50'
+              }`}
+            >
+              <div className="flex-1 min-w-0 mr-2">
                 <div className="text-cream-100 text-sm font-semibold">{ing.name}</div>
                 <div className="text-amber-400 text-xs opacity-70">
                   {(ing.params.ppkg as number)} ppkg · {(ing.params.color_l as number)}°L
                 </div>
+                {hasStock
+                  ? <div className="text-hop-400 text-xs">На складе: {inStock} кг</div>
+                  : <div className="text-red-400 text-xs">Нет на складе → купи в Рынке</div>
+                }
               </div>
-              <AmountControl
-                value={entry?.amountKg ?? 0}
-                step={0.1}
-                unit="кг"
-                onChange={(v) => setAmount(ing.key, v)}
-              />
+              {hasStock ? (
+                <AmountControl
+                  value={entry?.amountKg ?? 0}
+                  step={0.1}
+                  unit="кг"
+                  onChange={(v) => setAmount(ing.key, v)}
+                />
+              ) : (
+                <span className="text-brown-600 text-xs">🔒</span>
+              )}
             </div>
           )
         })}
@@ -134,16 +154,20 @@ const HOP_TIMING_LABELS: Record<HopTiming, string> = {
 function HopsTab({
   hops,
   onChange,
+  stockMap,
 }: {
-  hops: HopEntry[]
+  hops:     HopEntry[]
   onChange: (hops: HopEntry[]) => void
+  stockMap: Record<string, number>
 }) {
   const updateHop = (idx: number, patch: Partial<HopEntry>) => {
     onChange(hops.map((h, i) => i === idx ? { ...h, ...patch } : h))
   }
   const removeHop = (idx: number) => onChange(hops.filter((_, i) => i !== idx))
+  // Только хмель который есть на складе
+  const availableHops = HOPS.filter((h) => (stockMap[h.key] ?? 0) > 0)
   const addHop = () => {
-    const first = HOPS[0]
+    const first = availableHops[0] ?? HOPS[0]
     onChange([...hops, {
       key: first.key,
       name: first.name,
@@ -172,11 +196,14 @@ function HopsTab({
                   })
                 }}
               >
-                {HOPS.map((h) => (
-                  <option key={h.key} value={h.key}>
-                    {h.name} ({Math.round((h.params.alpha as number) * 100)}% α)
-                  </option>
-                ))}
+                {HOPS.map((h) => {
+                  const inStock = stockMap[h.key] ?? 0
+                  return (
+                    <option key={h.key} value={h.key} disabled={inStock === 0}>
+                      {h.name} ({Math.round((h.params.alpha as number) * 100)}% α){inStock === 0 ? ' — нет на складе' : ` — ${inStock}×100г`}
+                    </option>
+                  )
+                })}
               </select>
               <button
                 className="text-red-400 text-xs px-1 active:opacity-60"
@@ -213,12 +240,18 @@ function HopsTab({
             </div>
           </div>
         ))}
-        <button
-          className="w-full border border-dashed border-brown-700 text-cream-200 text-sm rounded-xl py-2 active:opacity-70"
-          onClick={addHop}
-        >
-          + Добавить хмель
-        </button>
+        {availableHops.length === 0 ? (
+          <div className="text-center py-3 text-red-400 text-xs">
+            Нет хмеля на складе — купи в Рынке → Магазин
+          </div>
+        ) : (
+          <button
+            className="w-full border border-dashed border-brown-700 text-cream-200 text-sm rounded-xl py-2 active:opacity-70"
+            onClick={addHop}
+          >
+            + Добавить хмель
+          </button>
+        )}
       </div>
     </Section>
   )
@@ -383,15 +416,31 @@ interface RecipeConstructorProps {
     volumeL: number
     targetStyleKey?: string
   }) => void
-  onSave?: () => void
   onBack?: () => void
   brewing?: boolean
   initialStyleKey?: string
 }
 
-export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false, initialStyleKey }: RecipeConstructorProps) {
+export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyleKey }: RecipeConstructorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('malt')
-  const [targetStyleKey, setTargetStyleKey] = useState<string>(initialStyleKey ?? 'ipa')
+  const [targetStyleKey, setTargetStyleKey] = useState<string>(initialStyleKey ?? '')
+
+  // ── Загружаем инвентарь и уровень игрока ─────────────────────────────────
+  const [stockMap,    setStockMap]    = useState<Record<string, number>>({})
+  const [userLevel,   setUserLevel]   = useState<number>(1)
+  const [dataLoading, setDataLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([api.getInventory(), api.getMe()])
+      .then(([inv, me]) => {
+        const stock: Record<string, number> = {}
+        for (const item of inv.items) stock[item.key] = item.quantity
+        setStockMap(stock)
+        setUserLevel(me.level ?? 1)
+      })
+      .catch(() => { /* показываем всё если ошибка */ })
+      .finally(() => setDataLoading(false))
+  }, [])
 
   // Рецепт
   const [malts,        setMalts]        = useState<MaltEntry[]>([])
@@ -402,6 +451,12 @@ export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false, ini
   const [mashTempC,    setMashTempC]    = useState(66)
   const [fermentTempC, setFermentTempC] = useState(19)
   const volumeL = 20 // базовый объём (в будущем — слайдер)
+
+  // Только разблокированные стили
+  const availableStyles = useMemo(
+    () => BEER_STYLES.filter((s) => s.unlock_level <= userLevel),
+    [userLevel],
+  )
 
   const targetStyle: StyleData | undefined = BEER_STYLES.find((s) => s.key === targetStyleKey)
 
@@ -449,12 +504,17 @@ export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false, ini
           className="w-full bg-brown-800 text-cream-100 text-sm rounded-xl px-3 py-2 border border-brown-700"
           value={targetStyleKey}
           onChange={(e) => setTargetStyleKey(e.target.value)}
+          disabled={dataLoading}
         >
           <option value="">— Свободный стиль —</option>
-          {BEER_STYLES.map((s) => (
+          {availableStyles.map((s) => (
             <option key={s.key} value={s.key}>{s.name}</option>
           ))}
+          {dataLoading && <option disabled>Загрузка…</option>}
         </select>
+        {availableStyles.length === 0 && !dataLoading && (
+          <p className="text-amber-400 text-xs mt-1">🔒 Повышай уровень чтобы открывать новые стили</p>
+        )}
       </header>
 
       {/* ParamPanel — живой предпросмотр */}
@@ -489,8 +549,8 @@ export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false, ini
 
       {/* Контент таба */}
       <div className="flex-1 px-4 py-4 overflow-y-auto">
-        {activeTab === 'malt'     && <MaltTab  malts={malts} onChange={setMalts} />}
-        {activeTab === 'hops'     && <HopsTab  hops={hops}   onChange={setHops}  />}
+        {activeTab === 'malt'     && <MaltTab  malts={malts} onChange={setMalts} stockMap={stockMap} />}
+        {activeTab === 'hops'     && <HopsTab  hops={hops}   onChange={setHops}  stockMap={stockMap} />}
         {activeTab === 'yeast'    && (
           <YeastTab
             yeastKey={yeastKey}
@@ -507,17 +567,16 @@ export function RecipeConstructor({ onBrew, onSave, onBack, brewing = false, ini
         {activeTab === 'adjuncts' && <AdjunctsTab />}
       </div>
 
-      {/* Нижние кнопки */}
-      <div className="px-4 py-4 border-t border-brown-800 bg-brown-950 flex gap-3">
-        <button
-          className="flex-1 border border-brown-700 text-cream-100 font-bold py-3 rounded-xl active:opacity-70"
-          onClick={onSave}
-        >
-          Сохранить
-        </button>
+      {/* Нижняя кнопка */}
+      <div className="px-4 py-4 border-t border-brown-800 bg-brown-950">
+        {!canBrew && (
+          <p className="text-cream-200 text-xs opacity-50 text-center mb-2">
+            Добавь солод и хмель чтобы начать варку
+          </p>
+        )}
         <button
           disabled={!canBrew || brewing}
-          className={`flex-1 font-bold py-3 rounded-xl transition-colors ${
+          className={`w-full font-bold py-3.5 rounded-2xl text-base transition-colors ${
             canBrew && !brewing
               ? 'bg-amber-600 text-brown-950 active:opacity-80'
               : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
