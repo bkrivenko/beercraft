@@ -52,7 +52,6 @@ export default function App() {
   const [recipeStyleKey, setRecipeStyleKey] = useState<string | undefined>(undefined)
 
   const showNav = !['recipe', 'brewing'].includes(screen)
-  const navActiveKey = ['recipe', 'brewing'].includes(screen) ? 'home' : screen
 
   const handleBrew = useCallback(async (recipe: Omit<StartBatchBody, 'name'>) => {
     setBrewing(true)

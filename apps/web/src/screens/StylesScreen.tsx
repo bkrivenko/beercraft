@@ -45,7 +45,6 @@ function StyleCard({
   onSelect: () => void
 }) {
   const color  = style.srm ? srmToHex((style.srm[0] + style.srm[1]) / 2) : '#4e2a0e'
-  const recipe = STYLE_RECIPES[style.key]
 
   return (
     <button
