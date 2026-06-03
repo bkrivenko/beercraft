@@ -19,7 +19,7 @@ export interface BeerCardProps {
 // Картинка для стиля пива (из /assets/beer/)
 export function getBeerImage(styleKey?: string | null): string | null {
   if (!styleKey) return null
-  return `/assets/beer/beer_${styleKey}.jpg`
+  return `/assets/beer/beer_${styleKey}.webp`
 }
 
 // ── Порядок и длительность этапов ────────────────────────────────────────────
