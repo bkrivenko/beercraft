@@ -11,111 +11,225 @@ export interface BeerCardProps {
   srm: number | null
   status: 'mashing' | 'boiling' | 'fermenting' | 'conditioning' | 'ready' | 'sold'
   readyAt: string | null
+  startedAt?: string | null
   onClick?: () => void
 }
 
+// ── Порядок и длительность этапов ────────────────────────────────────────────
+const STAGE_ORDER = ['mashing', 'boiling', 'fermenting', 'conditioning', 'ready'] as const
+type ActiveStatus = 'mashing' | 'boiling' | 'fermenting' | 'conditioning'
+
+// Длительности этапов в секундах (зеркало сервера)
+const STAGE_DURATION_S: Record<ActiveStatus, number> = {
+  mashing:      5 * 60,
+  boiling:      5 * 60,
+  fermenting:   4 * 60 * 60,
+  conditioning: 2 * 60 * 60,
+}
+
+const STATUS_ICON: Record<BeerCardProps['status'], string> = {
+  mashing:      '🌾',
+  boiling:      '🔥',
+  fermenting:   '🧪',
+  conditioning: '❄️',
+  ready:        '✅',
+  sold:         '💰',
+}
+
 const STATUS_LABEL: Record<BeerCardProps['status'], string> = {
-  mashing:      '🌾 Затирание',
-  boiling:      '🔥 Варка',
-  fermenting:   '🧪 Брожение',
-  conditioning: '❄️ Выдержка',
-  ready:        '✅ Готово',
-  sold:         '💰 Продано',
+  mashing:      'Затирание',
+  boiling:      'Варка',
+  fermenting:   'Брожение',
+  conditioning: 'Выдержка',
+  ready:        'Готово!',
+  sold:         'Продано',
 }
 
-const STATUS_COLOR: Record<BeerCardProps['status'], string> = {
-  mashing:      'bg-amber-500 text-brown-950',
-  boiling:      'bg-amber-600 text-brown-950',
-  fermenting:   'bg-hop-700 text-cream-100',
-  conditioning: 'bg-hop-900 text-cream-100',
-  ready:        'bg-hop-600 text-cream-100',
-  sold:         'bg-brown-800 text-cream-200',
+const NEXT_LABEL: Record<ActiveStatus, string> = {
+  mashing:      'затем варка 5 мин',
+  boiling:      'затем брожение 4 ч',
+  fermenting:   'затем выдержка 2 ч',
+  conditioning: 'затем готово к продаже →',
 }
 
-function BeerColorBlock({ srm, status }: { srm: number | null; status: BeerCardProps['status'] }) {
-  const color = srm != null ? srmToHex(srm) : '#4e2a0e'
+// ── Прогресс-бар этапа ────────────────────────────────────────────────────────
+function StageProgress({
+  secondsLeft,
+  status,
+}: {
+  secondsLeft: number
+  status: ActiveStatus
+}) {
+  const total   = STAGE_DURATION_S[status]
+  const elapsed = Math.max(0, total - secondsLeft)
+  const pct     = total > 0 ? Math.min(100, (elapsed / total) * 100) : 0
+
+  const barColor =
+    status === 'mashing'      ? 'bg-amber-500'
+    : status === 'boiling'    ? 'bg-amber-600'
+    : status === 'fermenting' ? 'bg-hop-600'
+    : 'bg-hop-400'
+
+  return (
+    <div className="space-y-1">
+      <div className="h-1.5 rounded-full bg-brown-700 overflow-hidden">
+        <div
+          className={`h-1.5 rounded-full transition-all duration-1000 ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-cream-200 text-xs opacity-40 text-right">{Math.round(pct)}%</p>
+    </div>
+  )
+}
+
+// ── Цепочка этапов ────────────────────────────────────────────────────────────
+function StagePipeline({ status }: { status: BeerCardProps['status'] }) {
+  const currentIdx = STAGE_ORDER.indexOf(status as typeof STAGE_ORDER[number])
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {STAGE_ORDER.map((s, i) => {
+        const done    = i < currentIdx
+        const current = i === currentIdx
+        const future  = i > currentIdx
+
+        return (
+          <div key={s} className="flex items-center gap-0.5">
+            <div className={`text-xs ${
+              current ? 'opacity-100' : done ? 'opacity-60' : 'opacity-20'
+            }`}>
+              {STATUS_ICON[s]}
+            </div>
+            {i < STAGE_ORDER.length - 1 && (
+              <div className={`w-3 h-0.5 rounded-full ${
+                done ? 'bg-hop-600' : current ? 'bg-amber-500' : 'bg-brown-700'
+              }`} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Главный компонент ─────────────────────────────────────────────────────────
+
+export function BeerCard({
+  name, styleName, ibu, abv, quality, srm,
+  status, readyAt, onClick,
+}: BeerCardProps) {
+  const seconds  = useCountdown(readyAt)
   const isActive = ['mashing', 'boiling', 'fermenting', 'conditioning'].includes(status)
+  const isReady  = status === 'ready'
 
-  return (
-    <div
-      className="w-full h-20 rounded-t-xl flex items-center justify-center relative overflow-hidden"
-      style={{ background: color }}
-    >
-      <span className="text-3xl select-none">{isActive ? '⏳' : '🍺'}</span>
-      {/* пульс для активных */}
-      {isActive && (
-        <div className="absolute inset-0 animate-pulse opacity-10 bg-white rounded-t-xl" />
-      )}
-    </div>
-  )
-}
+  const beerColor = srm != null ? srmToHex(srm) : '#3b1e0a'
 
-function Timer({ readyAt, status }: { readyAt: string | null; status: BeerCardProps['status'] }) {
-  const seconds = useCountdown(readyAt)
-  const active  = readyAt && ['mashing','boiling','fermenting','conditioning'].includes(status)
-  if (!active) return null
-
-  return (
-    <div className="flex items-center gap-1 text-amber-400 text-xs font-mono font-bold">
-      <span>⏱</span>
-      <span>{formatCountdown(seconds)}</span>
-    </div>
-  )
-}
-
-export function BeerCard({ name, styleName, ibu, abv, quality, srm, status, readyAt, onClick }: BeerCardProps) {
   return (
     <article
-      className={`bg-brown-900 rounded-xl overflow-hidden border border-brown-800 shadow-lg
-        ${onClick ? 'cursor-pointer active:opacity-80' : ''}`}
+      className={`bg-brown-900 rounded-2xl overflow-hidden border shadow-lg flex flex-col ${
+        isReady
+          ? 'border-amber-500 shadow-amber-900/30'
+          : 'border-brown-800'
+      } ${onClick ? 'cursor-pointer active:opacity-80' : ''}`}
       onClick={onClick}
     >
-      <BeerColorBlock srm={srm} status={status} />
+      {/* Цветной блок */}
+      <div
+        className="relative h-16 flex items-center justify-center overflow-hidden"
+        style={{ background: isReady ? beerColor : `${beerColor}88` }}
+      >
+        {/* Анимация для активных */}
+        {isActive && (
+          <div className="absolute inset-0 animate-pulse opacity-10 bg-white" />
+        )}
 
-      <div className="p-3 space-y-2">
+        {/* Иконка статуса */}
+        <span className={`text-3xl select-none z-10 ${isActive ? 'animate-bounce' : ''}`}
+          style={{ animationDuration: '2s' }}>
+          {isReady ? '🍺' : STATUS_ICON[status]}
+        </span>
+
+        {/* Бейдж «ГОТОВО» */}
+        {isReady && (
+          <div className="absolute top-1.5 right-1.5 bg-amber-500 text-brown-950 text-xs font-black px-1.5 py-0.5 rounded-full">
+            ГОТОВО
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 space-y-2.5 flex-1">
+        {/* Название */}
         <div>
           <h3 className="text-cream-100 font-bold text-sm leading-tight truncate">{name}</h3>
           {styleName && <p className="text-amber-400 text-xs mt-0.5 truncate">{styleName}</p>}
         </div>
 
-        {/* Параметры (только если уже есть) */}
-        {(ibu != null || abv != null) && (
-          <div className="flex gap-3 text-xs text-cream-200">
-            {ibu  != null && <span>IBU <strong className="text-cream-100">{ibu}</strong></span>}
-            {abv  != null && <span>ABV <strong className="text-cream-100">{abv}%</strong></span>}
+        {/* Активный этап: таймер + прогресс-бар + подсказка "что будет дальше" */}
+        {isActive && (
+          <div className="space-y-1.5">
+            {/* Статус + таймер */}
+            <div className="flex items-center justify-between">
+              <span className="text-cream-100 text-xs font-semibold">
+                {STATUS_ICON[status]} {STATUS_LABEL[status]}
+              </span>
+              <span className={`font-mono font-bold text-xs ${
+                seconds < 60 ? 'text-amber-400 animate-pulse' : 'text-cream-100'
+              }`}>
+                {seconds > 0 ? formatCountdown(seconds) : '…'}
+              </span>
+            </div>
+
+            {/* Прогресс-бар */}
+            <StageProgress
+              secondsLeft={seconds}
+              status={status as ActiveStatus}
+            />
+
+            {/* Что будет дальше */}
+            <p className="text-cream-200 text-xs opacity-40">
+              {NEXT_LABEL[status as ActiveStatus]}
+            </p>
           </div>
         )}
 
-        {/* Полоса качества */}
-        {quality != null && (
-          <div>
-            <div className="flex justify-between text-xs text-cream-200 mb-1">
-              <span>Качество</span>
-              <span className="text-amber-400 font-bold">{quality}</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-brown-800">
-              <div
-                className="h-1.5 rounded-full bg-amber-600 transition-all duration-500"
-                style={{ width: `${quality}%` }}
-              />
+        {/* Готово: качество + призыв к действию */}
+        {isReady && (
+          <div className="space-y-2">
+            {quality != null && (
+              <div>
+                <div className="flex justify-between text-xs text-cream-200 mb-1">
+                  <span>Качество</span>
+                  <span className={`font-bold ${
+                    quality >= 85 ? 'text-hop-400'
+                    : quality >= 70 ? 'text-amber-400'
+                    : 'text-cream-100'
+                  }`}>{quality}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-brown-800">
+                  <div
+                    className={`h-1.5 rounded-full ${
+                      quality >= 85 ? 'bg-hop-500' : quality >= 70 ? 'bg-amber-500' : 'bg-brown-600'
+                    }`}
+                    style={{ width: `${quality}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            {(ibu != null || abv != null) && (
+              <div className="flex gap-2 text-xs text-cream-200">
+                {abv != null && <span>ABV <strong className="text-cream-100">{abv}%</strong></span>}
+                {ibu != null && <span>IBU <strong className="text-cream-100">{ibu}</strong></span>}
+              </div>
+            )}
+            <div className="bg-amber-600/20 border border-amber-600/50 rounded-lg px-2 py-1.5 text-center">
+              <p className="text-amber-400 text-xs font-semibold">Рынок → Продажа</p>
             </div>
           </div>
         )}
 
-        {/* Статус + таймер */}
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[status]}`}>
-            {STATUS_LABEL[status]}
-          </span>
-          <Timer readyAt={readyAt} status={status} />
-        </div>
-
-        {/* Кнопка для ready */}
-        {status === 'ready' && (
-          <button className="w-full bg-amber-600 text-brown-950 text-xs font-bold py-1.5 rounded-lg mt-1 active:opacity-80">
-            Забрать
-          </button>
-        )}
+        {/* Пайплайн этапов */}
+        <StagePipeline status={status} />
       </div>
     </article>
   )
