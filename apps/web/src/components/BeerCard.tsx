@@ -92,7 +92,6 @@ function StagePipeline({ status }: { status: BeerCardProps['status'] }) {
       {STAGE_ORDER.map((s, i) => {
         const done    = i < currentIdx
         const current = i === currentIdx
-        const future  = i > currentIdx
 
         return (
           <div key={s} className="flex items-center gap-0.5">
