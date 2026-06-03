@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "postinstall": "npx prisma generate",
     "build": "tsc -p tsconfig.json",
-    "start": "npx prisma generate; npx prisma db push --accept-data-loss; node dist/index.js",
+    "start": "npx prisma generate; npx prisma db push --accept-data-loss; npx tsx prisma/seed.ts; node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts"

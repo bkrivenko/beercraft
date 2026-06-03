@@ -16,6 +16,7 @@ export async function getOrCreateUser(tgUser: TelegramUser) {
       display_name: displayName,
       locale: tgUser.language_code ?? 'ru',
       last_seen_at: new Date(),
+      soft_currency: 500,   // стартовые монеты для покупки ингредиентов
     },
     update: {
       username: tgUser.username ?? null,

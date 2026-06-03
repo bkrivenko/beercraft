@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { api, type MarketOrder, type BatchForSale, type Trend, type SellPrice } from '../lib/api'
+import { api, type MarketOrder, type BatchForSale, type Trend, type SellPrice, type Ingredient, type InventoryItem } from '../lib/api'
 import { srmToHex } from '../lib/brewCalc'
 
-type Tab = 'orders' | 'sell' | 'trends'
+type Tab = 'shop' | 'orders' | 'sell' | 'trends'
 
 // ── Иконка тренда ─────────────────────────────────────────────────────────────
 function TrendIcon({ trend }: { trend: 'up' | 'down' | 'neutral' }) {
@@ -342,10 +342,179 @@ function TrendsTab() {
 }
 
 // ── Главный экран Э-5 ─────────────────────────────────────────────────────────
+// ── Таб: Магазин ингредиентов ─────────────────────────────────────────────────
+function ShopTab() {
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [inventory,   setInventory]   = useState<InventoryItem[]>([])
+  const [coins,       setCoins]       = useState<number | null>(null)
+  const [loading,     setLoading]     = useState(true)
+  const [buying,      setBuying]      = useState<string | null>(null)
+  const [toast,       setToast]       = useState<string | null>(null)
+  const [qty,         setQty]         = useState<Record<string, number>>({})
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000) }
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [ing, inv, me] = await Promise.all([
+        api.getIngredients(),
+        api.getInventory(),
+        api.getMe(),
+      ])
+      setIngredients(ing.items)
+      setInventory(inv.items)
+      setCoins(me.softCurrency)
+    } catch (e) {
+      showToast(`❌ ${e instanceof Error ? e.message : 'Ошибка загрузки'}`)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const stockMap = Object.fromEntries(inventory.map(i => [i.key, i.quantity]))
+
+  const TYPE_ICON: Record<string, string> = {
+    malt: '🌾', hop: '🌿', yeast: '🧫', water: '💧', adjunct: '🍊',
+  }
+  const TYPE_LABEL: Record<string, string> = {
+    malt: 'Солод', hop: 'Хмель', yeast: 'Дрожжи', water: 'Вода', adjunct: 'Добавки',
+  }
+
+  // Группируем по типу
+  const grouped = ingredients.reduce<Record<string, Ingredient[]>>((acc, i) => {
+    const t = i.type ?? 'other';
+    (acc[t] = acc[t] ?? []).push(i)
+    return acc
+  }, {})
+
+  async function handleBuy(key: string, price: number) {
+    const amount = qty[key] ?? 1
+    setBuying(key)
+    try {
+      await api.purchase(key, amount)
+      showToast(`✅ Куплено! -${price * amount} 🪙`)
+      await load()
+    } catch (e) {
+      showToast(`❌ ${e instanceof Error ? e.message : 'Ошибка покупки'}`)
+    } finally {
+      setBuying(null)
+    }
+  }
+
+  if (loading) return (
+    <div className="px-4 pt-4 space-y-3">
+      {[0,1,2,3].map(i => <Skeleton key={i} className="h-20" />)}
+    </div>
+  )
+
+  return (
+    <div className="px-4 pt-4 pb-4 space-y-5">
+      {toast && (
+        <div className="fixed top-20 left-4 right-4 bg-brown-900 border border-brown-700 rounded-xl px-4 py-3 z-50 text-center">
+          <p className="text-cream-100 text-sm font-semibold">{toast}</p>
+        </div>
+      )}
+
+      {/* Баланс */}
+      {coins != null && (
+        <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-cream-200 text-sm">Баланс</span>
+          <span className="text-amber-400 font-bold text-lg">{coins.toLocaleString('ru')} 🪙</span>
+        </div>
+      )}
+
+      {/* Склад — что уже есть */}
+      {inventory.length > 0 && (
+        <div>
+          <h3 className="text-cream-200 text-xs font-semibold uppercase tracking-wider mb-2">📦 На складе</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {inventory.map(item => (
+              <div key={item.key} className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2.5 flex items-center gap-2">
+                <span className="text-lg">{TYPE_ICON[item.type ?? ''] ?? '📦'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-cream-100 text-xs font-semibold truncate">{item.name}</p>
+                  <p className="text-amber-400 text-xs">{item.quantity} {item.unit}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {inventory.length === 0 && !loading && (
+        <div className="text-center py-4">
+          <p className="text-cream-200 text-sm opacity-60">Склад пуст — купи ингредиенты ниже</p>
+        </div>
+      )}
+
+      {/* Каталог по типам */}
+      {Object.entries(grouped).map(([type, items]) => (
+        <div key={type}>
+          <h3 className="text-cream-200 text-xs font-semibold uppercase tracking-wider mb-2">
+            {TYPE_ICON[type]} {TYPE_LABEL[type] ?? type}
+          </h3>
+          <div className="space-y-2">
+            {items.map(ing => {
+              const stock = stockMap[ing.key] ?? 0
+              const amount = qty[ing.key] ?? 1
+              return (
+                <div key={ing.key} className="bg-brown-900 border border-brown-800 rounded-xl px-4 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-cream-100 font-semibold text-sm">{ing.name}</p>
+                      <p className="text-amber-400 text-xs mt-0.5">{ing.basePrice} 🪙 / {ing.unit}</p>
+                      {stock > 0 && (
+                        <p className="text-hop-400 text-xs mt-0.5">На складе: {stock} {ing.unit}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Количество */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          className="w-7 h-7 bg-brown-800 text-cream-100 rounded-lg text-sm active:opacity-70"
+                          onClick={() => setQty(q => ({ ...q, [ing.key]: Math.max(1, (q[ing.key] ?? 1) - 1) }))}
+                        >−</button>
+                        <span className="text-cream-100 text-sm w-5 text-center">{amount}</span>
+                        <button
+                          className="w-7 h-7 bg-brown-800 text-cream-100 rounded-lg text-sm active:opacity-70"
+                          onClick={() => setQty(q => ({ ...q, [ing.key]: (q[ing.key] ?? 1) + 1 }))}
+                        >+</button>
+                      </div>
+                      <button
+                        disabled={buying === ing.key || (coins != null && coins < ing.basePrice * amount)}
+                        className="bg-amber-600 text-brown-950 text-xs font-bold px-3 py-2 rounded-lg active:opacity-80 disabled:opacity-40"
+                        onClick={() => handleBuy(ing.key, ing.basePrice)}
+                      >
+                        {buying === ing.key ? '⏳' : 'Купить'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      {ingredients.length === 0 && !loading && (
+        <div className="text-center py-8">
+          <p className="text-5xl mb-3">📭</p>
+          <p className="text-cream-200 text-sm opacity-60">Каталог ингредиентов пуст</p>
+          <p className="text-cream-200 text-xs opacity-40 mt-1">Сервер загружает данные…</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function MarketScreen({ onBack }: { onBack?: () => void }) {
-  const [tab, setTab] = useState<Tab>('orders')
+  const [tab, setTab] = useState<Tab>('shop')
 
   const TABS: Array<{ key: Tab; label: string }> = [
+    { key: 'shop',   label: '🛒 Магазин' },
     { key: 'orders', label: '📋 Заказы' },
     { key: 'sell',   label: '💰 Продажа' },
     { key: 'trends', label: '📈 Тренды' },
@@ -372,6 +541,7 @@ export function MarketScreen({ onBack }: { onBack?: () => void }) {
       </header>
 
       <div className="flex-1 overflow-y-auto pb-16">
+        {tab === 'shop'   && <ShopTab />}
         {tab === 'orders' && <OrdersTab />}
         {tab === 'sell'   && <SellTab />}
         {tab === 'trends' && <TrendsTab />}

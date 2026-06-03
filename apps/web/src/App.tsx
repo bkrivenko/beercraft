@@ -63,7 +63,19 @@ export default function App() {
       setBatchId(batch.id)
       setScreen('brewing')
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Ошибка запуска варки'
+      const raw = e instanceof Error ? e.message : 'Ошибка запуска варки'
+      // Переводим типичные серверные ошибки в понятный текст
+      let msg = raw
+      if (raw.includes('INSUFFICIENT_STOCK') || raw.includes('Недостаточно'))
+        msg = '❌ Недостаточно ингредиентов на складе. Купи их в Рынке → Магазин.'
+      else if (raw.includes('EMPTY_MALTS') || raw.includes('солод'))
+        msg = '❌ Добавь хотя бы один солод в рецепт.'
+      else if (raw.includes('EMPTY_HOPS') || raw.includes('хмель'))
+        msg = '❌ Добавь хотя бы один хмель в рецепт.'
+      else if (raw.includes('401') || raw.includes('initData'))
+        msg = '❌ Ошибка авторизации. Перезапусти приложение в Telegram.'
+      else if (raw.includes('500') || raw.includes('Internal'))
+        msg = '❌ Ошибка сервера. Попробуй ещё раз через несколько секунд.'
       setBrewError(msg)
     } finally {
       setBrewing(false)
