@@ -379,6 +379,13 @@ function ShopTab() {
   const TYPE_ICON: Record<string, string> = {
     malt: '🌾', hop: '🌿', yeast: '🧫', water: '💧', adjunct: '🍊',
   }
+
+  function getIngredientImage(type: string, key: string): string | null {
+    if (type === 'malt')  return `/assets/malts/${key}.webp`
+    if (type === 'hop')   return `/assets/hops/${key}.webp`
+    if (type === 'yeast') return `/assets/yeasts/${key}.webp`
+    return null
+  }
   const TYPE_LABEL: Record<string, string> = {
     malt: 'Солод', hop: 'Хмель', yeast: 'Дрожжи', water: 'Вода', adjunct: 'Добавки',
   }
@@ -434,15 +441,22 @@ function ShopTab() {
         <div>
           <h3 className="text-cream-200 text-xs font-semibold uppercase tracking-wider mb-2">📦 На складе</h3>
           <div className="grid grid-cols-2 gap-2">
-            {inventory.filter(item => item.type !== 'water').map(item => (
-              <div key={item.key} className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2.5 flex items-center gap-2">
-                <span className="text-lg">{TYPE_ICON[item.type ?? ''] ?? '📦'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-cream-100 text-xs font-semibold truncate">{item.name}</p>
-                  <p className="text-amber-400 text-xs">{item.quantity} {item.unit}</p>
+            {inventory.filter(item => item.type !== 'water').map(item => {
+              const img = getIngredientImage(item.type ?? '', item.key)
+              return (
+                <div key={item.key} className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2.5 flex items-center gap-2">
+                  {img ? (
+                    <img src={img} alt={item.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <span className="text-lg">{TYPE_ICON[item.type ?? ''] ?? '📦'}</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-cream-100 text-xs font-semibold truncate">{item.name}</p>
+                    <p className="text-amber-400 text-xs">{item.quantity} {item.unit}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
@@ -463,8 +477,13 @@ function ShopTab() {
             {items.map(ing => {
               const stock = stockMap[ing.key] ?? 0
               const amount = qty[ing.key] ?? 1
+              const img = getIngredientImage(ing.type, ing.key)
               return (
-                <div key={ing.key} className="bg-brown-900 border border-brown-800 rounded-xl px-4 py-3">
+                <div key={ing.key} className="bg-brown-900 border border-brown-800 rounded-xl overflow-hidden">
+                  {img && (
+                    <img src={img} alt={ing.name} className="w-full h-24 object-cover" />
+                  )}
+                  <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <p className="text-cream-100 font-semibold text-sm">{ing.name}</p>
@@ -494,6 +513,7 @@ function ShopTab() {
                         {buying === ing.key ? '⏳' : 'Купить'}
                       </button>
                     </div>
+                  </div>
                   </div>
                 </div>
               )

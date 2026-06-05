@@ -124,6 +124,8 @@ function MaltTab({
                   : 'bg-brown-900/40 border-brown-800/40 opacity-50'
               }`}
             >
+              <img src={`/assets/malts/${ing.key}.webp`} alt={ing.name}
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2" />
               <div className="flex-1 min-w-0 mr-2">
                 <div className="text-cream-100 text-sm font-semibold">{ing.name}</div>
                 <div className="text-amber-400 text-xs opacity-70">
@@ -194,6 +196,8 @@ function HopsTab({
         {hops.map((hop, idx) => (
           <div key={idx} className="bg-brown-900 border border-brown-800 rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between">
+              <img src={`/assets/hops/${hop.key}.webp`} alt={hop.name}
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2" />
               {/* Выбор сорта */}
               <select
                 className="bg-brown-800 text-cream-100 text-sm rounded-lg px-2 py-1 border border-brown-700 flex-1 mr-2"
@@ -318,17 +322,23 @@ function YeastTab({
                 }`}
                 onClick={() => inStock && onYeastChange(y.key, att, tmin, tmax)}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-cream-100 text-sm font-semibold">{y.name}</span>
-                  <div className="flex items-center gap-1">
-                    {!inStock && <span className="text-red-400 text-xs">нет на складе</span>}
-                    {selected  && <span className="text-amber-600 text-xs">✓</span>}
+                <div className="flex items-center gap-2">
+                  <img src={`/assets/yeasts/${y.key}.webp`} alt={y.name}
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-cream-100 text-sm font-semibold">{y.name}</span>
+                      <div className="flex items-center gap-1">
+                        {!inStock && <span className="text-red-400 text-xs">нет на складе</span>}
+                        {selected  && <span className="text-amber-600 text-xs">✓</span>}
+                      </div>
+                    </div>
+                    <div className="text-amber-400 text-xs opacity-70">
+                      Атт. {Math.round(att * 100)}% · {tmin}–{tmax}°C
+                    </div>
+                    <div className="text-cream-200 text-xs opacity-50">{y.params.profile as string}</div>
                   </div>
                 </div>
-                <div className="text-amber-400 text-xs opacity-70">
-                  Атт. {Math.round(att * 100)}% · {tmin}–{tmax}°C
-                </div>
-                <div className="text-cream-200 text-xs opacity-50">{y.params.profile as string}</div>
               </button>
             )
           })}
