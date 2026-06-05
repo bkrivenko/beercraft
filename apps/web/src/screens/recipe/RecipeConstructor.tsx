@@ -124,7 +124,7 @@ function MaltTab({
                   : 'bg-brown-900/40 border-brown-800/40 opacity-50'
               }`}
             >
-              <img src={`/assets/malts/${ing.key}.webp`} alt={ing.name}
+              <img src={`/assets/malts/malt_${ing.key}.webp`} alt={ing.name}
                 className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2" />
               <div className="flex-1 min-w-0 mr-2">
                 <div className="text-cream-100 text-sm font-semibold">{ing.name}</div>
@@ -196,7 +196,7 @@ function HopsTab({
         {hops.map((hop, idx) => (
           <div key={idx} className="bg-brown-900 border border-brown-800 rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <img src={`/assets/hops/${hop.key}.webp`} alt={hop.name}
+              <img src={`/assets/hops/hop_${hop.key}.webp`} alt={hop.name}
                 className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2" />
               {/* Выбор сорта */}
               <select
@@ -323,7 +323,7 @@ function YeastTab({
                 onClick={() => inStock && onYeastChange(y.key, att, tmin, tmax)}
               >
                 <div className="flex items-center gap-2">
-                  <img src={`/assets/yeasts/${y.key}.webp`} alt={y.name}
+                  <img src={`/assets/yeasts/yeast_${y.key}.webp`} alt={y.name}
                     className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">

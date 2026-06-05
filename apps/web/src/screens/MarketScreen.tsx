@@ -381,9 +381,9 @@ function ShopTab() {
   }
 
   function getIngredientImage(type: string, key: string): string | null {
-    if (type === 'malt')  return `/assets/malts/${key}.webp`
-    if (type === 'hop')   return `/assets/hops/${key}.webp`
-    if (type === 'yeast') return `/assets/yeasts/${key}.webp`
+    if (type === 'malt')  return `/assets/malts/malt_${key}.webp`
+    if (type === 'hop')   return `/assets/hops/hop_${key}.webp`
+    if (type === 'yeast') return `/assets/yeasts/yeast_${key}.webp`
     return null
   }
   const TYPE_LABEL: Record<string, string> = {
