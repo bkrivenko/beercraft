@@ -125,7 +125,8 @@ function MaltTab({
               }`}
             >
               <img src={`/assets/malts/malt_${ing.key}.webp`} alt={ing.name}
-                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2" />
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               <div className="flex-1 min-w-0 mr-2">
                 <div className="text-cream-100 text-sm font-semibold">{ing.name}</div>
                 <div className="text-amber-400 text-xs opacity-70">
@@ -197,7 +198,8 @@ function HopsTab({
           <div key={idx} className="bg-brown-900 border border-brown-800 rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between">
               <img src={`/assets/hops/hop_${hop.key}.webp`} alt={hop.name}
-                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2" />
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 mr-2"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               {/* Выбор сорта */}
               <select
                 className="bg-brown-800 text-cream-100 text-sm rounded-lg px-2 py-1 border border-brown-700 flex-1 mr-2"
@@ -324,7 +326,8 @@ function YeastTab({
               >
                 <div className="flex items-center gap-2">
                   <img src={`/assets/yeasts/yeast_${y.key}.webp`} alt={y.name}
-                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-cream-100 text-sm font-semibold">{y.name}</span>

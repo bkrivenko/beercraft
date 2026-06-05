@@ -446,7 +446,8 @@ function ShopTab() {
               return (
                 <div key={item.key} className="bg-brown-900 border border-brown-800 rounded-xl px-3 py-2.5 flex items-center gap-2">
                   {img ? (
-                    <img src={img} alt={item.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+                    <img src={img} alt={item.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   ) : (
                     <span className="text-lg">{TYPE_ICON[item.type ?? ''] ?? '📦'}</span>
                   )}
@@ -481,7 +482,8 @@ function ShopTab() {
               return (
                 <div key={ing.key} className="bg-brown-900 border border-brown-800 rounded-xl overflow-hidden">
                   {img && (
-                    <img src={img} alt={ing.name} className="w-full h-24 object-cover" />
+                    <img src={img} alt={ing.name} className="w-full h-24 object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
                   )}
                   <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
