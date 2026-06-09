@@ -13,6 +13,7 @@ import {
   YEASTS,
   WATER_PROFILES,
   BEER_STYLES,
+  STYLE_RECIPES,
   type StyleData,
 } from '../../lib/contentData'
 
@@ -454,6 +455,83 @@ function AdjunctsTab() {
   )
 }
 
+// ── Модальное окно: не хватает ингредиентов ───────────────────────────────────
+
+interface MissingItem {
+  key:  string
+  name: string
+  need: number
+  have: number
+  unit: string
+  icon: string
+}
+
+function MissingIngredientsModal({
+  items,
+  onClose,
+  onGoMarket,
+}: {
+  items: MissingItem[]
+  onClose: () => void
+  onGoMarket: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={onClose}>
+      <div
+        className="w-full bg-brown-900 border-t border-brown-700 rounded-t-2xl p-5 space-y-4"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Заголовок */}
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🛒</span>
+          <div>
+            <h3 className="text-cream-100 font-bold text-lg">Не хватает ингредиентов</h3>
+            <p className="text-cream-200 text-xs opacity-60">Купи в магазине и возвращайся варить</p>
+          </div>
+        </div>
+
+        {/* Список */}
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          {items.map(item => (
+            <div key={item.key + item.need}
+              className="flex items-center justify-between bg-brown-800 border border-red-900/50 rounded-xl px-4 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{item.icon}</span>
+                <div>
+                  <p className="text-cream-100 text-sm font-semibold">{item.name}</p>
+                  <p className="text-red-400 text-xs">
+                    Нужно {item.need} {item.unit} · есть {item.have} {item.unit}
+                  </p>
+                </div>
+              </div>
+              <p className="text-red-400 text-sm font-bold">
+                −{Math.ceil((item.need - item.have) * 10) / 10} {item.unit}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Кнопки */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 rounded-2xl border border-brown-700 text-cream-200 font-semibold active:opacity-70"
+          >
+            Отмена
+          </button>
+          <button
+            onClick={onGoMarket}
+            className="flex-1 py-3 rounded-2xl bg-amber-600 text-brown-950 font-black text-base active:opacity-80"
+          >
+            🏪 В магазин
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Главный компонент ─────────────────────────────────────────────────────────
 
 interface RecipeConstructorProps {
@@ -468,11 +546,12 @@ interface RecipeConstructorProps {
     targetStyleKey?: string
   }) => void
   onBack?: () => void
+  onGoMarket?: () => void
   brewing?: boolean
   initialStyleKey?: string
 }
 
-export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyleKey }: RecipeConstructorProps) {
+export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false, initialStyleKey }: RecipeConstructorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('malt')
   const [targetStyleKey, setTargetStyleKey] = useState<string>(initialStyleKey ?? '')
 
@@ -550,6 +629,78 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
     : undefined
 
   const canBrew = malts.length > 0 && hops.length > 0
+
+  // ── Проверка ингредиентов перед варкой ────────────────────────────────────
+  const [missingItems,     setMissingItems]     = useState<MissingItem[]>([])
+  const [showMissingModal, setShowMissingModal] = useState(false)
+
+  const handleBrewClick = useCallback(() => {
+    if (!canBrew || brewing) return
+
+    const curatedRecipe = targetStyleKey ? STYLE_RECIPES[targetStyleKey] : null
+
+    if (curatedRecipe) {
+      // Проверяем наличие ингредиентов из эталонного рецепта
+      const missing: MissingItem[] = []
+
+      // Солод
+      for (const m of curatedRecipe.malts) {
+        const have = stockMap[m.key] ?? 0
+        if (have < m.amountKg) {
+          missing.push({ key: m.key, name: m.name, need: m.amountKg, have, unit: 'кг', icon: '🌾' })
+        }
+      }
+
+      // Хмель (суммируем по ключу)
+      const hopNeeds: Record<string, { name: string; totalG: number }> = {}
+      for (const h of curatedRecipe.hops) {
+        if (!hopNeeds[h.key]) hopNeeds[h.key] = { name: h.name, totalG: 0 }
+        hopNeeds[h.key].totalG += h.amountG
+      }
+      for (const [key, { name, totalG }] of Object.entries(hopNeeds)) {
+        const haveG = (stockMap[key] ?? 0) * 100   // единица = 100 г
+        if (haveG < totalG) {
+          missing.push({ key, name, need: totalG, have: haveG, unit: 'г', icon: '🌿' })
+        }
+      }
+
+      // Дрожжи
+      if ((stockMap[curatedRecipe.yeastKey] ?? 0) < 1) {
+        const yeast = YEASTS.find(y => y.key === curatedRecipe.yeastKey)
+        missing.push({ key: curatedRecipe.yeastKey, name: yeast?.name ?? curatedRecipe.yeastKey, need: 1, have: 0, unit: 'шт', icon: '🧫' })
+      }
+
+      if (missing.length > 0) {
+        setMissingItems(missing)
+        setShowMissingModal(true)
+        return
+      }
+
+      // Всё есть — применяем оптимальный рецепт и варим
+      const optimalMalts: MaltEntry[] = curatedRecipe.malts.map(m => {
+        const ing = MALTS.find(i => i.key === m.key)!
+        return { key: m.key, name: m.name, ppkg: ing?.params.ppkg as number ?? 300, colorL: ing?.params.color_l as number ?? 3, amountKg: m.amountKg }
+      })
+      const optimalHops: HopEntry[] = curatedRecipe.hops.map(h => {
+        const ing = HOPS.find(i => i.key === h.key)!
+        return { key: h.key, name: h.name, alphaFraction: ing?.params.alpha as number ?? 0.06, amountG: h.amountG, timing: h.timing as HopTiming }
+      })
+
+      onBrew?.({
+        malts: optimalMalts,
+        hops:  optimalHops,
+        yeastKey:     curatedRecipe.yeastKey,
+        waterKey:     curatedRecipe.waterKey,
+        mashTempC:    curatedRecipe.mashTempC,
+        fermentTempC: curatedRecipe.fermentTempC,
+        volumeL,
+        targetStyleKey,
+      })
+    } else {
+      // Свободный стиль — просто варим с текущими ингредиентами
+      onBrew?.({ malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, targetStyleKey: undefined })
+    }
+  }, [canBrew, brewing, targetStyleKey, stockMap, malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, onBrew])
 
   return (
     <div className="min-h-screen bg-brown-950 flex flex-col">
@@ -631,25 +782,37 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
 
       {/* Нижняя кнопка */}
       <div className="px-4 py-4 border-t border-brown-800 bg-brown-950">
-        {!canBrew && (
+        {targetStyleKey && STYLE_RECIPES[targetStyleKey] && (
+          <p className="text-hop-400 text-xs text-center mb-2 opacity-70">
+            ✨ Оптимальный рецепт применится автоматически
+          </p>
+        )}
+        {!canBrew && !targetStyleKey && (
           <p className="text-cream-200 text-xs opacity-50 text-center mb-2">
-            Добавь солод и хмель чтобы начать варку
+            Добавь солод и хмель или выбери стиль пива
           </p>
         )}
         <button
-          disabled={!canBrew || brewing}
+          disabled={(!canBrew && !targetStyleKey) || brewing}
           className={`w-full font-bold py-3.5 rounded-2xl text-base transition-colors ${
-            canBrew && !brewing
+            (canBrew || targetStyleKey) && !brewing
               ? 'bg-amber-600 text-brown-950 active:opacity-80'
               : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
           }`}
-          onClick={() => canBrew && !brewing && onBrew?.({
-            malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, targetStyleKey: targetStyleKey || undefined,
-          })}
+          onClick={handleBrewClick}
         >
           {brewing ? '⏳ Запуск…' : '🍺 Варить'}
         </button>
       </div>
+
+      {/* Модальное окно — не хватает ингредиентов */}
+      {showMissingModal && (
+        <MissingIngredientsModal
+          items={missingItems}
+          onClose={() => setShowMissingModal(false)}
+          onGoMarket={() => { setShowMissingModal(false); onGoMarket?.() }}
+        />
+      )}
     </div>
   )
 }

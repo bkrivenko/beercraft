@@ -167,6 +167,7 @@ export default function App() {
         <RecipeConstructor
           onBack={() => setScreen('home')}
           onBrew={handleBrew}
+          onGoMarket={() => setScreen('market')}
           brewing={brewing}
           initialStyleKey={recipeStyleKey}
         />
