@@ -375,7 +375,7 @@ interface CharState {
 // ─── Модальное окно оборудования ──────────────────────────────────────────────
 
 function EquipModal({
-  type, item, def, userLevel, coins,
+  type: _type, item, def, userLevel, coins,
   onClose, onBuy, onUpgrade, loading
 }: {
   type: string
