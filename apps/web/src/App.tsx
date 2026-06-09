@@ -7,8 +7,15 @@ import { ProfileScreen }       from './screens/ProfileScreen'
 import { DuelScreen }          from './screens/DuelScreen'
 import { StylesScreen }        from './screens/StylesScreen'
 import { OnboardingScreen }    from './screens/OnboardingScreen'
+import { TutorialHint }        from './components/TutorialHint'
 import { api }                 from './lib/api'
 import type { StartBatchBody } from './lib/api'
+import {
+  getTutorialStepForScreen,
+  getTutorialStep,
+  isTutorialDone,
+  TUTORIAL_STEPS,
+} from './lib/tutorial'
 import './App.css'
 
 type Screen = 'home' | 'recipe' | 'brewing' | 'styles' | 'market' | 'duel' | 'profile'
@@ -51,35 +58,37 @@ export default function App() {
   const [brewError,      setBrewError]      = useState<string | null>(null)
   const [brewing,        setBrewing]        = useState(false)
   const [recipeStyleKey, setRecipeStyleKey] = useState<string | undefined>(undefined)
+  const [userLevel,      setUserLevel]      = useState(1)
 
-  // Онбординг: null = ещё не знаем, true = показывать, false = уже показан
+  // Tutorial — перерисовываем при смене шага
+  const [tutorialTick, setTutorialTick] = useState(0)
+  const refreshTutorial = useCallback(() => setTutorialTick(t => t + 1), [])
+
+  // Онбординг
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
 
-  // Проверяем флаг онбординга при запуске
-  // Приоритет: localStorage (быстро) → сервер (надёжно)
   useEffect(() => {
     const localDone = localStorage.getItem('beercraft_onboarding_done') === 'true'
-    if (localDone) {
-      // Уже видел локально — не показываем
-      setShowOnboarding(false)
-      return
-    }
-    // Проверяем сервер
+    if (localDone) { setShowOnboarding(false); return }
     api.getMe()
       .then(me => {
+        setUserLevel(me.level ?? 1)
         if (me.onboardingDone) {
-          // Сервер говорит: уже прошёл — запомним локально и скроем
           localStorage.setItem('beercraft_onboarding_done', 'true')
           setShowOnboarding(false)
         } else {
-          // Нужно показать
           setShowOnboarding(true)
         }
       })
-      .catch(() => {
-        // Ошибка сервера — показываем онбординг (новый пользователь скорее всего)
-        setShowOnboarding(true)
-      })
+      .catch(() => setShowOnboarding(true))
+  }, [])
+
+  // Подгружаем уровень периодически чтобы отключить туториал на 2м уровне
+  useEffect(() => {
+    const id = setInterval(() => {
+      api.getMe().then(me => setUserLevel(me.level ?? 1)).catch(() => {})
+    }, 30_000)
+    return () => clearInterval(id)
   }, [])
 
   const showNav = !['recipe', 'brewing'].includes(screen)
@@ -124,7 +133,33 @@ export default function App() {
     setScreen('recipe')
   }, [])
 
-  // Пока не знаем статус онбординга — показываем заглушку
+  // Определяем текущий шаг туториала для экрана
+  const tutorialStep = isTutorialDone()
+    ? null
+    : getTutorialStepForScreen(screen)
+
+  // Когда переходим на экран — сразу проверяем нужно ли advance (шаг другого экрана)
+  // Например если шаг "home_welcome" и мы перешли в recipe — advance автоматически
+  useEffect(() => {
+    if (isTutorialDone()) return
+    const step = getTutorialStep()
+    const currentStepDef = TUTORIAL_STEPS[step]
+    if (!currentStepDef) return
+    // Если пользователь перешёл на следующий экран — это означает "completeOn: navigate"
+    if (currentStepDef.completeOn === 'navigate' && currentStepDef.screen !== screen) {
+      // Advance до следующего шага этого экрана
+      // Находим первый шаг для текущего экрана начиная с текущего
+      let idx = step
+      while (idx < TUTORIAL_STEPS.length && TUTORIAL_STEPS[idx].screen !== screen) {
+        idx++
+      }
+      if (idx < TUTORIAL_STEPS.length) {
+        localStorage.setItem('beercraft_tutorial_step', String(idx))
+        refreshTutorial()
+      }
+    }
+  }, [screen, refreshTutorial])
+
   if (showOnboarding === null) {
     return (
       <div className="min-h-screen bg-brown-950 flex items-center justify-center">
@@ -136,7 +171,6 @@ export default function App() {
     )
   }
 
-  // Показываем онбординг поверх всего
   if (showOnboarding) {
     return <OnboardingScreen onDone={() => setShowOnboarding(false)} />
   }
@@ -152,10 +186,7 @@ export default function App() {
           {brewError && (
             <div className="fixed top-4 left-4 right-4 bg-red-950 border border-red-700 rounded-xl px-4 py-3 z-50 shadow-xl">
               <p className="text-red-300 text-sm font-semibold">{brewError}</p>
-              <button
-                className="text-red-400 text-xs underline mt-1"
-                onClick={() => setBrewError(null)}
-              >
+              <button className="text-red-400 text-xs underline mt-1" onClick={() => setBrewError(null)}>
                 Закрыть
               </button>
             </div>
@@ -186,6 +217,16 @@ export default function App() {
       {screen === 'profile' && <ProfileScreen onBack={() => setScreen('home')} />}
 
       {showNav && <BottomNav current={screen} onChange={setScreen} />}
+
+      {/* Туториал — показывается поверх всего */}
+      <TutorialHint
+        key={tutorialTick}
+        step={tutorialStep}
+        onAdvance={refreshTutorial}
+        userLevel={userLevel}
+        totalSteps={TUTORIAL_STEPS.length}
+        currentIndex={getTutorialStep()}
+      />
     </div>
   )
 }

@@ -267,6 +267,7 @@ function StageScreen({
 
         {phase === 'playing' && (
           <button
+            data-tutorial="game-button"
             className={`w-full rounded-3xl py-10 flex flex-col items-center justify-center gap-2 select-none transition-all active:scale-95 ${
               inZone
                 ? 'bg-amber-500 shadow-xl shadow-amber-500/40 border-2 border-amber-400'

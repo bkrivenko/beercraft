@@ -713,6 +713,7 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
 
         {/* Выбор целевого стиля */}
         <select
+          data-tutorial="style-select"
           className="w-full bg-brown-800 text-cream-100 text-sm rounded-xl px-3 py-2 border border-brown-700"
           value={targetStyleKey}
           onChange={(e) => setTargetStyleKey(e.target.value)}
@@ -793,6 +794,7 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
           </p>
         )}
         <button
+          data-tutorial="brew-button"
           disabled={(!canBrew && !targetStyleKey) || brewing}
           className={`w-full font-bold py-3.5 rounded-2xl text-base transition-colors ${
             (canBrew || targetStyleKey) && !brewing

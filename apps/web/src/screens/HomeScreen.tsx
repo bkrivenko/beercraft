@@ -326,7 +326,7 @@ export function HomeScreen({
             >🍺 Начать новую варку</button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div data-tutorial="batch-cards" className="grid grid-cols-2 gap-3">
             {activeBatches.map((b) => (
               <BeerCard
                 key={b.id}
@@ -357,6 +357,7 @@ export function HomeScreen({
       {/* Кнопка варки */}
       <div className="fixed bottom-16 left-0 right-0 px-4 pb-3 pt-4 bg-gradient-to-t from-brown-950 via-brown-950/90 to-transparent">
         <button
+          data-tutorial="brew-button"
           className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80"
           onClick={() => onBrew?.()}
         >

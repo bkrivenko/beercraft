@@ -552,10 +552,11 @@ export function MarketScreen({ onBack }: { onBack?: () => void }) {
           <button className="text-cream-200 text-lg active:opacity-60" onClick={onBack}>‹</button>
           <h1 className="text-cream-100 font-bold text-base">Рынок</h1>
         </div>
-        <div className="flex gap-1 mt-3 bg-brown-800 rounded-xl p-1">
+        <div data-tutorial="market-tabs" className="flex gap-1 mt-3 bg-brown-800 rounded-xl p-1">
           {TABS.map(t => (
             <button
               key={t.key}
+              data-tutorial={t.key === 'shop' ? 'shop-tab' : t.key === 'orders' ? 'orders-tab' : t.key === 'sell' ? 'sell-tab' : undefined}
               className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${
                 tab === t.key ? 'bg-amber-600 text-brown-950' : 'text-cream-200 active:opacity-70'
               }`}
