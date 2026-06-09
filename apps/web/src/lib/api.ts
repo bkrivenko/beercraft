@@ -67,6 +67,11 @@ export const api = {
     request<any>(`/api/v1/match/${matchId}/submit`, { method: 'POST', body: JSON.stringify({ batchId }) }),
   matchHistory:   () => request<{ items: any[] }>('/api/v1/match/history'),
 
+  // Рецепты
+  getOwnedRecipes: () => request<{ items: OwnedRecipe[] }>('/api/v1/recipes/owned'),
+  getRecipeShop:   () => request<{ items: RecipeShopItem[] }>('/api/v1/recipes/shop'),
+  buyRecipe:       (styleKey: string) => request('/api/v1/recipes/buy', { method: 'POST', body: JSON.stringify({ styleKey }) }),
+
   // Оборудование
   getEquipment:     () => request<{ items: EquipmentItem[] }>('/api/v1/equipment'),
   buyEquipment:     (type: string) => request('/api/v1/equipment/buy', { method: 'POST', body: JSON.stringify({ type }) }),
@@ -172,6 +177,14 @@ export interface PlayerStats {
   stats: { brewsTotal: number; soldBatches: number; avgQuality: number | null; totalIncome: number }
   topBatches: Array<{ quality: number; styleName: string; abv: number | null; ibu: number | null }>
   nextLevelUnlocks?: { level: number; styles: string[]; ingredients: string[]; equipment: string[] }
+}
+
+export interface OwnedRecipe {
+  styleKey: string; source: string; unlockedAt: string
+}
+
+export interface RecipeShopItem {
+  styleKey: string; name: string; price: number; unlockLevel: number; canAfford: boolean
 }
 
 export interface EquipmentItem {

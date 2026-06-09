@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { api } from '../../lib/api'
+import { api, type OwnedRecipe } from '../../lib/api'
 import { ParamPanel } from '../../components/ParamPanel'
 import {
   calculatePreview,
@@ -476,18 +476,20 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
   const [activeTab, setActiveTab] = useState<Tab>('malt')
   const [targetStyleKey, setTargetStyleKey] = useState<string>(initialStyleKey ?? '')
 
-  // ── Загружаем инвентарь и уровень игрока ─────────────────────────────────
-  const [stockMap,    setStockMap]    = useState<Record<string, number>>({})
-  const [userLevel,   setUserLevel]   = useState<number>(1)
-  const [dataLoading, setDataLoading] = useState(true)
+  // ── Загружаем инвентарь, уровень и owned рецепты ─────────────────────────
+  const [stockMap,      setStockMap]      = useState<Record<string, number>>({})
+  const [userLevel,     setUserLevel]     = useState<number>(1)
+  const [ownedRecipes,  setOwnedRecipes]  = useState<Set<string>>(new Set(['pale_ale']))
+  const [dataLoading,   setDataLoading]   = useState(true)
 
   useEffect(() => {
-    Promise.all([api.getInventory(), api.getMe()])
-      .then(([inv, me]) => {
+    Promise.all([api.getInventory(), api.getMe(), api.getOwnedRecipes()])
+      .then(([inv, me, owned]: [any, any, any]) => {
         const stock: Record<string, number> = {}
         for (const item of inv.items) stock[item.key] = item.quantity
         setStockMap(stock)
         setUserLevel(me.level ?? 1)
+        setOwnedRecipes(new Set((owned.items as OwnedRecipe[]).map(r => r.styleKey)))
       })
       .catch(() => { /* показываем всё если ошибка */ })
       .finally(() => setDataLoading(false))
@@ -505,10 +507,10 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
   const [fermentTempC, setFermentTempC] = useState(19)
   const volumeL = 20
 
-  // Только разблокированные стили
+  // Только owned рецепты (купленные или полученные за заказы)
   const availableStyles = useMemo(
-    () => BEER_STYLES.filter((s) => s.unlock_level <= userLevel),
-    [userLevel],
+    () => BEER_STYLES.filter((s) => ownedRecipes.has(s.key)),
+    [ownedRecipes],
   )
 
   const targetStyle: StyleData | undefined = BEER_STYLES.find((s) => s.key === targetStyleKey)
