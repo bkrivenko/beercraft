@@ -478,7 +478,7 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
 
   // ── Загружаем инвентарь, уровень и owned рецепты ─────────────────────────
   const [stockMap,      setStockMap]      = useState<Record<string, number>>({})
-  const [userLevel,     setUserLevel]     = useState<number>(1)
+  const [_userLevel,    setUserLevel]     = useState<number>(1)
   const [ownedRecipes,  setOwnedRecipes]  = useState<Set<string>>(new Set(['pale_ale']))
   const [dataLoading,   setDataLoading]   = useState(true)
 
