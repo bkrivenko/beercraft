@@ -314,8 +314,17 @@ export function HomeScreen({
           <div className="grid grid-cols-2 gap-3">
             {[0,1].map((i) => <Skeleton key={i} className="h-48" />)}
           </div>
-        ) : activeBatches.length === 0 ? (
+        ) : batches.length === 0 ? (
           <EmptyBatches onBrew={() => onBrew?.()} />
+        ) : activeBatches.length === 0 ? (
+          <div className="flex flex-col items-center py-6 space-y-2">
+            <span className="text-4xl">😴</span>
+            <p className="text-cream-200 text-sm opacity-60">Нет активных варок</p>
+            <button
+              className="bg-amber-600 text-brown-950 font-bold px-5 py-2 rounded-xl text-sm active:opacity-80"
+              onClick={() => onBrew?.()}
+            >🍺 Начать новую варку</button>
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {activeBatches.map((b) => (
