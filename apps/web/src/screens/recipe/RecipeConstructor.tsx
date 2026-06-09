@@ -478,17 +478,15 @@ export function RecipeConstructor({ onBrew, onBack, brewing = false, initialStyl
 
   // ── Загружаем инвентарь, уровень и owned рецепты ─────────────────────────
   const [stockMap,      setStockMap]      = useState<Record<string, number>>({})
-  const [_userLevel,    setUserLevel]     = useState<number>(1)
   const [ownedRecipes,  setOwnedRecipes]  = useState<Set<string>>(new Set(['pale_ale']))
   const [dataLoading,   setDataLoading]   = useState(true)
 
   useEffect(() => {
-    Promise.all([api.getInventory(), api.getMe(), api.getOwnedRecipes()])
-      .then(([inv, me, owned]: [any, any, any]) => {
+    Promise.all([api.getInventory(), api.getOwnedRecipes()])
+      .then(([inv, owned]: [any, any]) => {
         const stock: Record<string, number> = {}
         for (const item of inv.items) stock[item.key] = item.quantity
         setStockMap(stock)
-        setUserLevel(me.level ?? 1)
         setOwnedRecipes(new Set((owned.items as OwnedRecipe[]).map(r => r.styleKey)))
       })
       .catch(() => { /* показываем всё если ошибка */ })
