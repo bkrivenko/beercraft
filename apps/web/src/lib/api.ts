@@ -67,6 +67,11 @@ export const api = {
     request<any>(`/api/v1/match/${matchId}/submit`, { method: 'POST', body: JSON.stringify({ batchId }) }),
   matchHistory:   () => request<{ items: any[] }>('/api/v1/match/history'),
 
+  // Оборудование
+  getEquipment:     () => request<{ items: EquipmentItem[] }>('/api/v1/equipment'),
+  buyEquipment:     (type: string) => request('/api/v1/equipment/buy', { method: 'POST', body: JSON.stringify({ type }) }),
+  upgradeEquipment: (type: string) => request('/api/v1/equipment/upgrade', { method: 'POST', body: JSON.stringify({ type }) }),
+
   // Ингредиенты
   getIngredients: () => request<{ items: Ingredient[]; total: number }>('/api/v1/ingredients'),
   getInventory:   () => request<{ items: InventoryItem[]; total: number }>('/api/v1/inventory'),
@@ -167,6 +172,12 @@ export interface PlayerStats {
   stats: { brewsTotal: number; soldBatches: number; avgQuality: number | null; totalIncome: number }
   topBatches: Array<{ quality: number; styleName: string; abv: number | null; ibu: number | null }>
   nextLevelUnlocks?: { level: number; styles: string[]; ingredients: string[]; equipment: string[] }
+}
+
+export interface EquipmentItem {
+  id: string; type: string; level: number; name: string
+  maxLevel: number; description: string; bonus: string
+  canUpgrade: boolean; upgradePrice: number | null; upgradeLevelReq: number | null
 }
 
 export interface FulfillResult {

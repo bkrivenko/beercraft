@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api, type PlayerStats, type InventoryItem } from '../lib/api'
 import { useTelegram } from '../telegram/useTelegram'
+import { BreweryScene } from './BreweryScene'
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse bg-brown-800 rounded-xl ${className ?? ''}`} />
@@ -114,14 +115,16 @@ function NextUnlocks({ unlocks }: { unlocks: NonNullable<PlayerStats['nextLevelU
 // ── Главный экран Э-8 ─────────────────────────────────────────────────────────
 export function ProfileScreen({ onBack }: { onBack?: () => void }) {
   const { displayName } = useTelegram()
+  const [activeTab,  setActiveTab]  = useState<'profile' | 'brewery'>('profile')
   const [stats,     setStats]     = useState<PlayerStats | null>(null)
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState<string | null>(null)
+  const [coins,     setCoins]     = useState(0)
 
   useEffect(() => {
     Promise.all([api.getStats(), api.getInventory()])
-      .then(([s, inv]) => { setStats(s); setInventory(inv.items) })
+      .then(([s, inv]) => { setStats(s); setInventory(inv.items); setCoins(s.softCurrency) })
       .catch((e) => {
         const msg = e instanceof Error ? e.message : String(e)
         const status = (e as any).status
@@ -139,14 +142,44 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
   return (
     <div className="min-h-screen bg-brown-950 flex flex-col">
       {/* Шапка */}
-      <header className="bg-brown-900 border-b border-brown-800 px-4 py-3">
-        <div className="flex items-center gap-3">
+      <header className="bg-brown-900 border-b border-brown-800 px-4 pt-3">
+        <div className="flex items-center gap-3 mb-3">
           <button className="text-cream-200 text-lg active:opacity-60" onClick={onBack}>‹</button>
           <h1 className="text-cream-100 font-bold text-base">Профиль</h1>
         </div>
+        {/* Вкладки */}
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex-1 py-2 text-sm font-semibold border-b-2 transition-colors ${
+              activeTab === 'profile'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-cream-200 opacity-60'
+            }`}
+          >👤 Профиль</button>
+          <button
+            onClick={() => setActiveTab('brewery')}
+            className={`flex-1 py-2 text-sm font-semibold border-b-2 transition-colors ${
+              activeTab === 'brewery'
+                ? 'border-amber-500 text-amber-400'
+                : 'border-transparent text-cream-200 opacity-60'
+            }`}
+          >🏭 Пивоварня</button>
+        </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5 pb-20">
+      {/* Вкладка Пивоварня */}
+      {activeTab === 'brewery' && !loading && stats && (
+        <div className="flex-1 overflow-y-auto pb-20">
+          <BreweryScene
+            userLevel={stats.level}
+            coins={coins}
+            onCoinsChange={(delta) => setCoins(c => c + delta)}
+          />
+        </div>
+      )}
+
+      <div className={`flex-1 overflow-y-auto px-4 py-5 space-y-5 pb-20 ${activeTab === 'brewery' ? 'hidden' : ''}`}>
 
         {loading ? (
           <div className="space-y-4">
