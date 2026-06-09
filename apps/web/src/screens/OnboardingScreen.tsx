@@ -353,9 +353,9 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
 
   const handleFinish = async () => {
     setExiting(true)
-    try {
-      await api.completeOnboarding()
-    } catch (_) { /* ignore */ }
+    // Сразу сохраняем локально — сервер обновим асинхронно
+    localStorage.setItem('beercraft_onboarding_done', 'true')
+    api.completeOnboarding().catch(() => { /* ignore */ })
     onDone()
   }
 

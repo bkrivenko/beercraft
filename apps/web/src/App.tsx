@@ -56,10 +56,30 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
 
   // Проверяем флаг онбординга при запуске
+  // Приоритет: localStorage (быстро) → сервер (надёжно)
   useEffect(() => {
+    const localDone = localStorage.getItem('beercraft_onboarding_done') === 'true'
+    if (localDone) {
+      // Уже видел локально — не показываем
+      setShowOnboarding(false)
+      return
+    }
+    // Проверяем сервер
     api.getMe()
-      .then(me => setShowOnboarding(!me.onboardingDone))
-      .catch(() => setShowOnboarding(false)) // при ошибке не блокируем приложение
+      .then(me => {
+        if (me.onboardingDone) {
+          // Сервер говорит: уже прошёл — запомним локально и скроем
+          localStorage.setItem('beercraft_onboarding_done', 'true')
+          setShowOnboarding(false)
+        } else {
+          // Нужно показать
+          setShowOnboarding(true)
+        }
+      })
+      .catch(() => {
+        // Ошибка сервера — показываем онбординг (новый пользователь скорее всего)
+        setShowOnboarding(true)
+      })
   }, [])
 
   const showNav = !['recipe', 'brewing'].includes(screen)
