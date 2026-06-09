@@ -12,7 +12,6 @@ import { GAME_CONFIG } from '../config/game-config.js'
 
 // ── Конфигурация ──────────────────────────────────────────────────────────────
 
-const ORDER_GEN_INTERVAL_H = 4   // новые заказы каждые 4 часа
 const MAX_ACTIVE_ORDERS    = 5   // макс. активных заказов у пивоварни
 const ORDER_TTL_H          = 48  // заказ живёт 48 часов
 
@@ -61,21 +60,6 @@ export class MarketError extends Error {
 // ── Генерация заказов ──────────────────────────────────────────────────────────
 
 export async function generateOrdersForBrewery(breweryId: bigint) {
-  // Проверяем когда последний раз генерировали
-  const latest = await (prisma as any).marketOrder.findFirst({
-    where:   { brewery_id: breweryId, status: 'open' },
-    orderBy: { created_at: 'desc' },
-    select:  { created_at: true },
-  })
-
-  const hoursSinceLast = latest
-    ? (Date.now() - new Date(latest.created_at).getTime()) / (1000 * 60 * 60)
-    : Infinity
-
-  if (hoursSinceLast < ORDER_GEN_INTERVAL_H) {
-    return { generated: 0, reason: 'too_soon' }
-  }
-
   // Считаем сколько активных заказов уже есть
   const activeCount = await (prisma as any).marketOrder.count({
     where: { brewery_id: breweryId, status: 'open' },
@@ -115,8 +99,8 @@ export async function getOrders(breweryId: bigint) {
     data:  { status: 'expired' },
   })
 
-  // Триггерим генерацию (не ждём)
-  void generateOrdersForBrewery(breweryId)
+  // Генерируем недостающие заказы (ждём, чтобы вернуть актуальный список)
+  await generateOrdersForBrewery(breweryId)
 
   const orders = await (prisma as any).marketOrder.findMany({
     where:   { brewery_id: breweryId, status: 'open' },
