@@ -234,6 +234,21 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
                 xpToNext={stats.progression.xpToNext}
                 progress={stats.progression.xpProgress}
               />
+
+              {/* Кнопка перехода в пивоварню */}
+              <button
+                onClick={() => setActiveTab('brewery')}
+                className="w-full flex items-center justify-between bg-brown-800 border border-amber-700/40 rounded-xl px-4 py-3 active:opacity-80"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🏭</span>
+                  <div className="text-left">
+                    <p className="text-cream-100 text-sm font-bold">Моя пивоварня</p>
+                    <p className="text-cream-200 text-xs opacity-60">Оборудование и улучшения</p>
+                  </div>
+                </div>
+                <span className="text-amber-400 text-lg">›</span>
+              </button>
             </div>
 
             {/* Статистика */}
