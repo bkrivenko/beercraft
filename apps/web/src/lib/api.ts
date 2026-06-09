@@ -67,6 +67,9 @@ export const api = {
     request<any>(`/api/v1/match/${matchId}/submit`, { method: 'POST', body: JSON.stringify({ batchId }) }),
   matchHistory:   () => request<{ items: any[] }>('/api/v1/match/history'),
 
+  // Онбординг
+  completeOnboarding: () => request('/api/v1/me/onboarding-done', { method: 'POST' }),
+
   // Рецепты
   getOwnedRecipes: () => request<{ items: OwnedRecipe[] }>('/api/v1/recipes/owned'),
   getRecipeShop:   () => request<{ items: RecipeShopItem[] }>('/api/v1/recipes/shop'),
@@ -97,6 +100,7 @@ export interface UserProfile {
   softCurrency: number
   premiumCurrency: number
   reputation: number
+  onboardingDone: boolean
   brewery: { id: string; name: string; treasury: number }
 }
 

@@ -19,6 +19,20 @@ export async function meRoutes(app: FastifyInstance) {
     }
   })
 
+  // ── POST /api/v1/me/onboarding-done ────────────────────────────────────────
+  app.post('/me/onboarding-done', { preHandler: authMiddleware }, async (request, reply) => {
+    try {
+      await (prisma as any).user.update({
+        where: { telegram_id: BigInt(request.telegramUser.id) },
+        data:  { onboarding_done: true },
+      })
+      return reply.send({ ok: true })
+    } catch (err) {
+      request.log.error(err)
+      return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
+
   // ── GET /api/v1/me/stats ────────────────────────────────────────────────────
   // Статистика для экрана профиля Э-8
   app.get('/me/stats', { preHandler: authMiddleware }, async (request, reply) => {

@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react'
-import { HomeScreen }        from './screens/HomeScreen'
-import { RecipeConstructor } from './screens/recipe/RecipeConstructor'
-import { BrewingGame }       from './screens/BrewingGame'
-import { MarketScreen }      from './screens/MarketScreen'
-import { ProfileScreen }     from './screens/ProfileScreen'
-import { DuelScreen }        from './screens/DuelScreen'
-import { StylesScreen }      from './screens/StylesScreen'
-import { api }               from './lib/api'
+import { useState, useCallback, useEffect } from 'react'
+import { HomeScreen }          from './screens/HomeScreen'
+import { RecipeConstructor }   from './screens/recipe/RecipeConstructor'
+import { BrewingGame }         from './screens/BrewingGame'
+import { MarketScreen }        from './screens/MarketScreen'
+import { ProfileScreen }       from './screens/ProfileScreen'
+import { DuelScreen }          from './screens/DuelScreen'
+import { StylesScreen }        from './screens/StylesScreen'
+import { OnboardingScreen }    from './screens/OnboardingScreen'
+import { api }                 from './lib/api'
 import type { StartBatchBody } from './lib/api'
 import './App.css'
 
@@ -45,11 +46,21 @@ function BottomNav({ current, onChange }: { current: Screen; onChange: (s: Scree
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen,        setScreen]        = useState<Screen>('home')
-  const [batchId,       setBatchId]       = useState<string | null>(null)
-  const [brewError,     setBrewError]     = useState<string | null>(null)
-  const [brewing,       setBrewing]       = useState(false)
+  const [screen,         setScreen]         = useState<Screen>('home')
+  const [batchId,        setBatchId]        = useState<string | null>(null)
+  const [brewError,      setBrewError]      = useState<string | null>(null)
+  const [brewing,        setBrewing]        = useState(false)
   const [recipeStyleKey, setRecipeStyleKey] = useState<string | undefined>(undefined)
+
+  // Онбординг: null = ещё не знаем, true = показывать, false = уже показан
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
+
+  // Проверяем флаг онбординга при запуске
+  useEffect(() => {
+    api.getMe()
+      .then(me => setShowOnboarding(!me.onboardingDone))
+      .catch(() => setShowOnboarding(false)) // при ошибке не блокируем приложение
+  }, [])
 
   const showNav = !['recipe', 'brewing'].includes(screen)
 
@@ -87,12 +98,28 @@ export default function App() {
     }
   }, [])
 
-  // Открыть рецепт с предустановленным стилем (из заказа)
   const handleStartBrew = useCallback((styleKey?: string) => {
     setBrewError(null)
     setRecipeStyleKey(styleKey)
     setScreen('recipe')
   }, [])
+
+  // Пока не знаем статус онбординга — показываем заглушку
+  if (showOnboarding === null) {
+    return (
+      <div className="min-h-screen bg-brown-950 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="text-5xl animate-bounce">🍺</div>
+          <p className="text-cream-200 text-sm opacity-60 animate-pulse">Загрузка...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Показываем онбординг поверх всего
+  if (showOnboarding) {
+    return <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+  }
 
   return (
     <div className="pb-16">

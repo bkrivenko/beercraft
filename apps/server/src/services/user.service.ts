@@ -86,6 +86,7 @@ export async function getOrCreateUser(tgUser: TelegramUser) {
       id: true, telegram_id: true, username: true, display_name: true,
       level: true, xp: true, soft_currency: true, premium_currency: true,
       reputation: true, locale: true, age_confirmed: true,
+      onboarding_done: true,
       created_at: true, last_seen_at: true,
     },
   })
@@ -118,6 +119,7 @@ export async function getOrCreateUser(tgUser: TelegramUser) {
     reputation:      user.reputation,
     locale:          user.locale,
     ageConfirmed:    user.age_confirmed,
+    onboardingDone:  user.onboarding_done,
     createdAt:       user.created_at,
     lastSeenAt:      user.last_seen_at,
     brewery: {
