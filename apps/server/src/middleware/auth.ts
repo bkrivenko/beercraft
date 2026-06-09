@@ -78,4 +78,16 @@ export async function authMiddleware(
     request.log.error({ err, tgId: request.telegramUser.id }, 'getOrCreateUser failed in authMiddleware')
     return reply.code(500).send({ error: 'Failed to initialize user', detail: err instanceof Error ? err.message : String(err) })
   }
+
+  // Проверяем блокировку
+  try {
+    const { prisma } = await import('../db/client.js')
+    const user = await prisma.user.findUnique({
+      where:  { telegram_id: BigInt(request.telegramUser.id) },
+      select: { is_blocked: true },
+    })
+    if (user?.is_blocked) {
+      return reply.code(403).send({ error: 'BLOCKED', message: 'Ваш аккаунт заблокирован. Обратитесь к администратору.' })
+    }
+  } catch { /* не ломаем если не смогли проверить */ }
 }

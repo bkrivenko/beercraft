@@ -20,7 +20,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new ApiError(body.error ?? `HTTP ${res.status}`, res.status, body.code)
+    const err = new ApiError(body.error ?? `HTTP ${res.status}`, res.status, body.code)
+    // Пробрасываем специальный флаг заблокированного пользователя
+    if (res.status === 403 && body.error === 'BLOCKED') {
+      err.code = 'BLOCKED'
+    }
+    throw err
   }
   return res.json() as Promise<T>
 }

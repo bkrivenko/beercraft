@@ -103,6 +103,7 @@ model User {
   age_confirmed       Boolean   @default(false)
   starter_pack_given  Boolean   @default(false)
   onboarding_done     Boolean   @default(false)
+  is_blocked          Boolean   @default(false)
   created_at       DateTime  @default(now()) @db.Timestamptz()
   last_seen_at     DateTime? @db.Timestamptz()
 

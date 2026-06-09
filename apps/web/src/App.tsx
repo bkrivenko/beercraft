@@ -8,7 +8,7 @@ import { DuelScreen }          from './screens/DuelScreen'
 import { StylesScreen }        from './screens/StylesScreen'
 import { OnboardingScreen }    from './screens/OnboardingScreen'
 import { TutorialHint }        from './components/TutorialHint'
-import { api }                 from './lib/api'
+import { api, ApiError }       from './lib/api'
 import type { StartBatchBody } from './lib/api'
 import {
   getTutorialStepForScreen,
@@ -59,6 +59,7 @@ export default function App() {
   const [brewing,        setBrewing]        = useState(false)
   const [recipeStyleKey, setRecipeStyleKey] = useState<string | undefined>(undefined)
   const [userLevel,      setUserLevel]      = useState(1)
+  const [isBlocked,      setIsBlocked]      = useState(false)
 
   // Tutorial — перерисовываем при смене шага
   const [tutorialTick, setTutorialTick] = useState(0)
@@ -73,6 +74,7 @@ export default function App() {
     api.getMe()
       .then(me => {
         setUserLevel(me.level ?? 1)
+        if ((me as any).isBlocked) { setIsBlocked(true); setShowOnboarding(false); return }
         if (me.onboardingDone) {
           localStorage.setItem('beercraft_onboarding_done', 'true')
           setShowOnboarding(false)
@@ -80,13 +82,24 @@ export default function App() {
           setShowOnboarding(true)
         }
       })
-      .catch(() => setShowOnboarding(true))
+      .catch((e: unknown) => {
+        if (e instanceof ApiError && e.code === 'BLOCKED') {
+          setIsBlocked(true)
+          setShowOnboarding(false)
+        } else {
+          setShowOnboarding(true)
+        }
+      })
   }, [])
 
-  // Подгружаем уровень периодически чтобы отключить туториал на 2м уровне
+  // Подгружаем уровень периодически + проверяем блокировку
   useEffect(() => {
     const id = setInterval(() => {
-      api.getMe().then(me => setUserLevel(me.level ?? 1)).catch(() => {})
+      api.getMe()
+        .then(me => setUserLevel(me.level ?? 1))
+        .catch((e: unknown) => {
+          if (e instanceof ApiError && e.code === 'BLOCKED') setIsBlocked(true)
+        })
     }, 30_000)
     return () => clearInterval(id)
   }, [])
@@ -159,6 +172,25 @@ export default function App() {
       }
     }
   }, [screen, refreshTutorial])
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-brown-950 flex items-center justify-center px-6">
+        <div className="text-center space-y-4 max-w-xs">
+          <div className="text-6xl">🚫</div>
+          <h1 className="text-cream-100 text-xl font-black">Аккаунт заблокирован</h1>
+          <p className="text-cream-200 text-sm opacity-70 leading-relaxed">
+            Ваш аккаунт был заблокирован администратором.
+            Если вы считаете, что это ошибка — обратитесь к администратору.
+          </p>
+          <div className="bg-brown-900 border border-brown-800 rounded-xl px-4 py-3">
+            <p className="text-amber-400 text-xs font-semibold">Поддержка</p>
+            <p className="text-cream-200 text-sm mt-1 opacity-70">@beercraft_support</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (showOnboarding === null) {
     return (

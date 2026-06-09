@@ -15,6 +15,7 @@ import { matchRoutes }               from './routes/api/v1/match.js'
 import { duelRoutes }                from './routes/api/v1/duel.js'
 import { equipmentRoutes }          from './routes/api/v1/equipment.js'
 import { recipeRoutes }            from './routes/api/v1/recipes.js'
+import { adminRoutes }              from './routes/admin.js'
 import { webhookRoutes }             from './routes/webhook.js'
 import { matchWsRoutes }             from './routes/ws/match.js'
 import { cancelStaleMatches }        from './services/match.service.js'
@@ -39,6 +40,7 @@ await app.register(matchRoutes,      { prefix: '/api/v1' })
 await app.register(duelRoutes,       { prefix: '/api/v1' })
 await app.register(equipmentRoutes,  { prefix: '/api/v1' })
 await app.register(recipeRoutes,     { prefix: '/api/v1' })
+await app.register(adminRoutes)
 
 // ── WebSocket Routes ──────────────────────────────────────────────────────────
 await app.register(matchWsRoutes)

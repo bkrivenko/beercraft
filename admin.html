@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BeerCraft Admin</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:      #0f0b07;
+    --bg2:     #1c1408;
+    --bg3:     #2a1e0f;
+    --border:  #3d2c14;
+    --amber:   #d97706;
+    --amber2:  #f59e0b;
+    --red:     #dc2626;
+    --green:   #16a34a;
+    --text:    #f5e9d0;
+    --muted:   #a0836a;
+    --radius:  10px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; }
+
+  /* ── Header ─────────────────────────────────────────────────────────────── */
+  header {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 20px; font-weight: 800; color: var(--amber2); }
+  header .badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--muted); }
+
+  /* ── Controls ────────────────────────────────────────────────────────────── */
+  .controls {
+    padding: 16px 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    border-bottom: 1px solid var(--border); background: var(--bg2);
+  }
+  input[type="text"], input[type="password"] {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: var(--radius); font-size: 13px; outline: none;
+  }
+  input[type="text"]:focus, input[type="password"]:focus { border-color: var(--amber); }
+  input[type="text"] { min-width: 220px; }
+  input[type="password"] { min-width: 180px; }
+  button {
+    padding: 8px 14px; border: none; border-radius: var(--radius); font-weight: 700;
+    cursor: pointer; font-size: 13px; transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button:active { opacity: .7; }
+  .btn-primary  { background: var(--amber);  color: #1c0f00; }
+  .btn-danger   { background: var(--red);    color: #fff; }
+  .btn-warning  { background: #92400e;       color: #fde68a; }
+  .btn-success  { background: var(--green);  color: #fff; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* ── Stats bar ───────────────────────────────────────────────────────────── */
+  .stats { display: flex; gap: 16px; padding: 12px 24px; border-bottom: 1px solid var(--border); }
+  .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 18px; }
+  .stat-val  { font-size: 22px; font-weight: 800; color: var(--amber2); }
+  .stat-label{ font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Table ───────────────────────────────────────────────────────────────── */
+  .table-wrap { padding: 16px 24px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: var(--bg2); }
+  .blocked td { background: #1a0505 !important; }
+  .blocked td .name { text-decoration: line-through; color: var(--muted); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+  .tag-blocked { background: #450a0a; color: #fca5a5; }
+  .tag-ok      { background: #052e16; color: #86efac; }
+  .actions { display: flex; gap: 6px; }
+
+  /* ── Pagination ──────────────────────────────────────────────────────────── */
+  .pagination { display: flex; gap: 8px; padding: 12px 24px; align-items: center; }
+  .pagination button { min-width: 36px; }
+  .page-info { color: var(--muted); font-size: 12px; }
+
+  /* ── Toast ───────────────────────────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 20px; border-radius: var(--radius); font-size: 13px;
+    opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99;
+    max-width: 320px;
+  }
+  #toast.show { opacity: 1; }
+  #toast.error { border-color: var(--red); color: #fca5a5; }
+
+  /* ── Confirm dialog ──────────────────────────────────────────────────────── */
+  #overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 50; align-items: center; justify-content: center;
+  }
+  #overlay.show { display: flex; }
+  .dialog {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+    padding: 28px; max-width: 360px; width: 90%; text-align: center; space-y: 16px;
+  }
+  .dialog h3 { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+  .dialog p  { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .dialog-btns { display: flex; gap: 10px; justify-content: center; }
+
+  /* ── Login screen ─────────────────────────────────────────────────────────── */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+    padding: 36px; width: 320px; text-align: center;
+  }
+  .login-box h2 { font-size: 22px; font-weight: 800; color: var(--amber2); margin-bottom: 6px; }
+  .login-box p  { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .login-box input { width: 100%; margin-bottom: 12px; }
+  .login-box button { width: 100%; }
+  .login-error { color: #fca5a5; font-size: 12px; margin-top: 8px; }
+
+  .hidden { display: none !important; }
+  .spin { display: inline-block; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ── Login ─────────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:48px;margin-bottom:12px">🍺</div>
+    <h2>BeerCraft Admin</h2>
+    <p>Введи секретный ключ для входа</p>
+    <input type="password" id="secret-input" placeholder="ADMIN_SECRET" />
+    <button class="btn-primary" onclick="doLogin()">Войти</button>
+    <p class="login-error hidden" id="login-error">Неверный ключ</p>
+  </div>
+</div>
+
+<!-- ── Main app ───────────────────────────────────────────────────────────── -->
+<div id="app" class="hidden">
+  <header>
+    <h1>🍺 BeerCraft Admin</h1>
+    <span class="badge" id="env-badge">—</span>
+    <span style="flex:1"></span>
+    <button class="btn-warning btn-sm" onclick="logout()">Выйти</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Всего пользователей</div></div>
+    <div class="stat"><div class="stat-val" id="stat-blocked">—</div><div class="stat-label">Заблокировано</div></div>
+    <div class="stat"><div class="stat-val" id="stat-page">—</div><div class="stat-label">На странице</div></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Поиск по имени / @username…" oninput="debounceSearch()" />
+    <button class="btn-primary" onclick="loadUsers()">🔍 Найти</button>
+    <button class="btn-sm" onclick="loadUsers()" style="background:var(--bg3);border:1px solid var(--border)">↺ Обновить</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Пользователь</th>
+          <th>TG ID</th>
+          <th>Ур.</th>
+          <th>Монеты</th>
+          <th>Репут.</th>
+          <th>Варок</th>
+          <th>Последний вход</th>
+          <th>Статус</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody id="user-tbody">
+        <tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button class="btn-sm" id="btn-prev" onclick="goPrev()">‹ Назад</button>
+    <span class="page-info" id="page-info">стр. 1</span>
+    <button class="btn-sm" id="btn-next" onclick="goNext()">Вперёд ›</button>
+  </div>
+</div>
+
+<!-- ── Confirm dialog ─────────────────────────────────────────────────────── -->
+<div id="overlay">
+  <div class="dialog">
+    <div style="font-size:40px;margin-bottom:8px" id="dialog-icon">⚠️</div>
+    <h3 id="dialog-title">Удалить пользователя?</h3>
+    <p id="dialog-msg">Это действие нельзя отменить.</p>
+    <div class="dialog-btns">
+      <button class="btn-sm" style="background:var(--bg3);border:1px solid var(--border)" onclick="closeDialog()">Отмена</button>
+      <button class="btn-sm btn-danger" id="dialog-confirm-btn" onclick="confirmAction()">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ──────────────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let SECRET = ''
+  let currentPage = 1
+  let totalPages  = 1
+  let pendingAction = null // { type: 'delete'|'block', userId, userName, isBlocked }
+  let searchTimer = null
+  let blockedCount = 0
+
+  // ── API base ───────────────────────────────────────────────────────────────
+  function apiBase() {
+    // When served from the same server, just use relative paths
+    return ''
+  }
+
+  function apiUrl(path) {
+    return `${apiBase()}${path}?secret=${encodeURIComponent(SECRET)}`
+  }
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const val = document.getElementById('secret-input').value.trim()
+    if (!val) return
+    SECRET = val
+    // Try fetching users to validate
+    try {
+      const res = await fetch(apiUrl('/admin/users') + '&limit=1')
+      if (res.status === 401) {
+        document.getElementById('login-error').classList.remove('hidden')
+        SECRET = ''
+        return
+      }
+      localStorage.setItem('bc_admin_secret', SECRET)
+      showApp()
+    } catch (e) {
+      document.getElementById('login-error').textContent = 'Ошибка соединения: ' + e.message
+      document.getElementById('login-error').classList.remove('hidden')
+      SECRET = ''
+    }
+  }
+
+  function logout() {
+    SECRET = ''
+    localStorage.removeItem('bc_admin_secret')
+    document.getElementById('app').classList.add('hidden')
+    document.getElementById('login-screen').classList.remove('hidden')
+    document.getElementById('secret-input').value = ''
+    document.getElementById('login-error').classList.add('hidden')
+  }
+
+  function showApp() {
+    document.getElementById('login-screen').classList.add('hidden')
+    document.getElementById('app').classList.remove('hidden')
+    document.getElementById('env-badge').textContent = window.location.hostname
+    loadUsers()
+  }
+
+  // ── On load — try saved secret ─────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('bc_admin_secret')
+    if (saved) {
+      SECRET = saved
+      document.getElementById('secret-input').value = saved
+      showApp()
+    }
+    document.getElementById('secret-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin()
+    })
+  })
+
+  // ── Load users ─────────────────────────────────────────────────────────────
+  async function loadUsers(page) {
+    if (page) currentPage = page
+    const search = document.getElementById('search-input').value.trim()
+    const url = apiUrl('/admin/users') + `&page=${currentPage}&limit=50` + (search ? `&search=${encodeURIComponent(search)}` : '')
+
+    const tbody = document.getElementById('user-tbody')
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted)"><span class="spin">⏳</span> Загрузка…</td></tr>`
+
+    try {
+      const res = await fetch(url)
+      if (res.status === 401) { logout(); return }
+      const data = await res.json()
+      totalPages = data.pages || 1
+      renderUsers(data)
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:#fca5a5">Ошибка: ${e.message}</td></tr>`
+    }
+  }
+
+  function renderUsers(data) {
+    const tbody = document.getElementById('user-tbody')
+    document.getElementById('stat-total').textContent = data.total
+    document.getElementById('stat-page').textContent  = data.users.length
+
+    blockedCount = data.users.filter(u => u.isBlocked).length
+    document.getElementById('stat-blocked').textContent = blockedCount
+
+    document.getElementById('page-info').textContent = `стр. ${data.page} / ${data.pages}`
+    document.getElementById('btn-prev').disabled = data.page <= 1
+    document.getElementById('btn-next').disabled = data.page >= data.pages
+
+    if (!data.users.length) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">Пусто</td></tr>`
+      return
+    }
+
+    tbody.innerHTML = data.users.map(u => {
+      const lastSeen = u.lastSeenAt
+        ? new Date(u.lastSeenAt).toLocaleString('ru', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' })
+        : '—'
+      const rowClass = u.isBlocked ? 'blocked' : ''
+      const statusTag = u.isBlocked
+        ? `<span class="tag tag-blocked">🚫 Блок</span>`
+        : `<span class="tag tag-ok">✅ Активен</span>`
+      const blockBtnLabel = u.isBlocked ? '🔓 Разблок' : '🚫 Блок'
+      const blockBtnClass = u.isBlocked ? 'btn-success' : 'btn-warning'
+
+      const displayName = escHtml(u.displayName || '—')
+      const username    = u.username ? `<span style="color:var(--muted);font-size:11px">@${escHtml(u.username)}</span>` : ''
+      const brewery     = u.brewery ? `<span style="color:var(--muted);font-size:11px">${escHtml(u.brewery.name)}</span>` : '—'
+
+      return `
+        <tr class="${rowClass}" id="row-${u.id}">
+          <td style="color:var(--muted);font-size:11px">${u.id}</td>
+          <td>
+            <div class="name" style="font-weight:700">${displayName}</div>
+            ${username}
+            <div>${brewery}</div>
+          </td>
+          <td style="color:var(--muted);font-size:12px">${u.telegramId}</td>
+          <td style="font-weight:700;color:var(--amber2)">${u.level}</td>
+          <td>${u.softCurrency.toLocaleString('ru')} 🪙</td>
+          <td>${u.reputation} ⭐</td>
+          <td>${u.brewery ? u.brewery.batchCount : '—'}</td>
+          <td style="font-size:12px;color:var(--muted)">${lastSeen}</td>
+          <td>${statusTag}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-sm ${blockBtnClass}" onclick="askBlock('${u.id}','${escHtml(u.displayName || u.id)}',${u.isBlocked})">${blockBtnLabel}</button>
+              <button class="btn-sm btn-danger"        onclick="askDelete('${u.id}','${escHtml(u.displayName || u.id)}')">🗑️ Удалить</button>
+            </div>
+          </td>
+        </tr>`
+    }).join('')
+  }
+
+  // ── Pagination ─────────────────────────────────────────────────────────────
+  function goPrev() { if (currentPage > 1) loadUsers(currentPage - 1) }
+  function goNext() { if (currentPage < totalPages) loadUsers(currentPage + 1) }
+
+  // ── Search debounce ────────────────────────────────────────────────────────
+  function debounceSearch() {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(() => { currentPage = 1; loadUsers() }, 400)
+  }
+
+  // ── Confirm dialogs ────────────────────────────────────────────────────────
+  function askDelete(userId, name) {
+    pendingAction = { type: 'delete', userId, name }
+    document.getElementById('dialog-icon').textContent = '🗑️'
+    document.getElementById('dialog-title').textContent = `Удалить «${name}»?`
+    document.getElementById('dialog-msg').textContent   = 'Пользователь и вся его пивоварня будут удалены навсегда. При следующем входе создастся новый аккаунт.'
+    document.getElementById('dialog-confirm-btn').textContent = 'Удалить'
+    document.getElementById('dialog-confirm-btn').className   = 'btn-sm btn-danger'
+    document.getElementById('overlay').classList.add('show')
+  }
+
+  function askBlock(userId, name, isBlocked) {
+    pendingAction = { type: 'block', userId, name, isBlocked }
+    const action = isBlocked ? 'Разблокировать' : 'Заблокировать'
+    const icon   = isBlocked ? '🔓' : '🚫'
+    document.getElementById('dialog-icon').textContent = icon
+    document.getElementById('dialog-title').textContent = `${action} «${name}»?`
+    document.getElementById('dialog-msg').textContent   = isBlocked
+      ? 'Пользователь снова сможет входить в игру.'
+      : 'Пользователь увидит сообщение о блокировке и не сможет пользоваться приложением.'
+    document.getElementById('dialog-confirm-btn').textContent = action
+    document.getElementById('dialog-confirm-btn').className   = isBlocked ? 'btn-sm btn-success' : 'btn-sm btn-warning'
+    document.getElementById('overlay').classList.add('show')
+  }
+
+  function closeDialog() {
+    document.getElementById('overlay').classList.remove('show')
+    pendingAction = null
+  }
+
+  async function confirmAction() {
+    if (!pendingAction) return
+    closeDialog()
+    const { type, userId, name, isBlocked } = pendingAction
+    pendingAction = null
+
+    try {
+      if (type === 'delete') {
+        const res = await fetch(apiUrl(`/admin/users/${userId}`), { method: 'DELETE' })
+        if (!res.ok) throw new Error(await res.text())
+        document.getElementById(`row-${userId}`)?.remove()
+        toast(`✅ Пользователь «${name}» удалён`)
+        loadUsers() // refresh counts
+      } else {
+        const res = await fetch(apiUrl(`/admin/users/${userId}/block`), { method: 'POST' })
+        if (!res.ok) throw new Error(await res.text())
+        const data = await res.json()
+        toast(data.isBlocked ? `🚫 «${name}» заблокирован` : `✅ «${name}» разблокирован`)
+        loadUsers() // refresh row
+      }
+    } catch (e) {
+      toast('❌ Ошибка: ' + e.message, true)
+    }
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  let toastTimer = null
+  function toast(msg, isError = false) {
+    const el = document.getElementById('toast')
+    el.textContent = msg
+    el.className = isError ? 'error show' : 'show'
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => { el.className = '' }, 3000)
+  }
+
+  // ── Escape HTML ────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+
+  // Close dialog on overlay click
+  document.getElementById('overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('overlay')) closeDialog()
+  })
+</script>
+</body>
+</html>
