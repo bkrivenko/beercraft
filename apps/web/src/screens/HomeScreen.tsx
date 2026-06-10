@@ -87,11 +87,23 @@ function OrderSheet({
         {/* Заголовок */}
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-amber-400 text-xs font-semibold">📋 Заказ</p>
+            {order.isStarter
+              ? <p className="text-hop-400 text-xs font-semibold">🎓 Стартовый заказ · без срока</p>
+              : <p className="text-amber-400 text-xs font-semibold">📋 Заказ</p>
+            }
             <h2 className="text-cream-100 font-bold text-lg">{order.customerName}</h2>
           </div>
           <button className="text-cream-200 opacity-50 text-2xl leading-none" onClick={onClose}>×</button>
         </div>
+
+        {order.isStarter && (
+          <div className="bg-hop-900/30 border border-hop-700/40 rounded-xl px-4 py-3">
+            <p className="text-hop-300 text-xs leading-relaxed">
+              💡 Сварите <strong className="text-cream-100">Pale Ale</strong> и выполните этот заказ — это последний шаг обучения!
+              Заказ никуда не пропадёт, пока вы на 1-м уровне.
+            </p>
+          </div>
+        )}
 
         {/* Стиль */}
         <div className="bg-hop-900/60 border border-hop-800 rounded-xl px-4 py-3">
@@ -136,10 +148,17 @@ function OrderSheet({
             <p className="text-amber-400 font-bold text-lg">+{order.rewardSoft} 🪙</p>
             <p className="text-hop-400 text-xs">+{order.rewardRep} ⭐</p>
           </div>
-          <div className="flex-1 bg-brown-800 rounded-xl px-4 py-3 text-center">
-            <p className="text-cream-200 text-xs opacity-60">До дедлайна</p>
-            <p className="text-cream-100 font-bold text-lg">{timeStr}</p>
-          </div>
+          {order.isStarter ? (
+            <div className="flex-1 bg-hop-900/30 border border-hop-700/30 rounded-xl px-4 py-3 text-center">
+              <p className="text-hop-400 text-xs opacity-70">Срок</p>
+              <p className="text-hop-300 font-bold text-base">Без срока</p>
+            </div>
+          ) : (
+            <div className="flex-1 bg-brown-800 rounded-xl px-4 py-3 text-center">
+              <p className="text-cream-200 text-xs opacity-60">До дедлайна</p>
+              <p className="text-cream-100 font-bold text-lg">{timeStr}</p>
+            </div>
+          )}
         </div>
 
         {/* Как выполнить */}
@@ -295,10 +314,19 @@ function OrdersSection({ onBrew }: { onBrew: (styleKey: string) => void }) {
           return (
             <button
               key={o.id}
-              className="w-full bg-brown-900 border border-brown-800 rounded-xl px-3 py-3 flex items-center justify-between active:opacity-80 text-left"
+              className={`w-full rounded-xl px-3 py-3 flex items-center justify-between active:opacity-80 text-left border ${
+                o.isStarter
+                  ? 'bg-hop-950/40 border-hop-700/60'
+                  : 'bg-brown-900 border-brown-800'
+              }`}
               onClick={() => setSelected(o)}
             >
-              <div>
+              <div className="flex-1 min-w-0">
+                {o.isStarter && (
+                  <span className="inline-block bg-hop-700/40 text-hop-300 text-xs font-bold px-2 py-0.5 rounded-full mb-1">
+                    🎓 Стартовый заказ
+                  </span>
+                )}
                 <p className="text-cream-100 text-sm font-semibold">{o.customerName}</p>
                 <p className="text-amber-400 text-xs mt-0.5">
                   {STYLE_NAME[o.styleKey ?? ''] ?? o.styleKey} · мин. {(o.constraints as any)?.min_quality ?? '—'}
@@ -306,7 +334,10 @@ function OrdersSection({ onBrew }: { onBrew: (styleKey: string) => void }) {
               </div>
               <div className="text-right shrink-0 ml-2">
                 <p className="text-cream-100 text-sm font-bold">+{o.rewardSoft} 🪙</p>
-                <p className="text-cream-200 text-xs opacity-50">⏳ {timeStr}</p>
+                {o.isStarter
+                  ? <p className="text-hop-400 text-xs">Без срока</p>
+                  : <p className="text-cream-200 text-xs opacity-50">⏳ {timeStr}</p>
+                }
               </div>
             </button>
           )

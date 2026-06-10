@@ -157,6 +157,7 @@ export interface MarketOrder {
   constraints: Record<string, unknown>; rewardSoft: number; rewardRep: number
   deadlineAt: string | null; hoursLeft: number | null
   demandMult: number; trend: 'up' | 'down' | 'neutral'
+  isStarter?: boolean
 }
 
 export interface Trend {

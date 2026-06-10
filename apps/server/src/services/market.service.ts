@@ -90,16 +90,72 @@ export async function generateOrdersForBrewery(breweryId: bigint) {
   return { generated: selected.length }
 }
 
+// ── Стартовый заказ для 1-го уровня ───────────────────────────────────────────
+
+const STARTER_ORDER = {
+  styleKey:     'pale_ale',
+  customerName: '🍺 Паб «Первое пиво»',
+  minQuality:   50,
+  rewardSoft:   200,
+  rewardRep:    5,
+  constraints:  { min_quality: 50 },
+}
+
+async function ensureStarterOrder(breweryId: bigint) {
+  // Если уже есть открытый стартовый заказ — не трогаем
+  const existing = await (prisma as any).marketOrder.findFirst({
+    where: {
+      brewery_id: breweryId,
+      status:     'open',
+      required_style_key: STARTER_ORDER.styleKey,
+      customer_name: STARTER_ORDER.customerName,
+    },
+  })
+  if (existing) return
+
+  await (prisma as any).marketOrder.create({
+    data: {
+      brewery_id:         breweryId,
+      customer_name:      STARTER_ORDER.customerName,
+      required_style_key: STARTER_ORDER.styleKey,
+      constraints:        STARTER_ORDER.constraints,
+      reward_soft:        STARTER_ORDER.rewardSoft,
+      reward_reputation:  STARTER_ORDER.rewardRep,
+      deadline_at:        null,   // не протухает
+      status:             'open',
+    },
+  })
+}
+
 // ── Список заказов пивоварни ───────────────────────────────────────────────────
 
 export async function getOrders(breweryId: bigint) {
-  // Сначала экспайрим просроченные
+  // Определяем уровень пользователя
+  const brewery = await (prisma as any).brewery.findUnique({
+    where:  { id: breweryId },
+    select: { owner: { select: { level: true } } },
+  })
+  const userLevel: number = brewery?.owner?.level ?? 1
+
+  if (userLevel === 1) {
+    // Уровень 1: один фиксированный стартовый заказ, не протухает, не обновляется
+    await ensureStarterOrder(breweryId)
+
+    const orders = await (prisma as any).marketOrder.findMany({
+      where:   { brewery_id: breweryId, status: 'open' },
+      orderBy: { created_at: 'asc' },
+      take:    1,
+    })
+    const demandMults = getDemandMultipliers()
+    return orders.map(serializeOrder.bind(null, demandMults))
+  }
+
+  // Уровень 2+: стандартная логика с экспирацией и генерацией
   await (prisma as any).marketOrder.updateMany({
     where: { brewery_id: breweryId, status: 'open', deadline_at: { lte: new Date() } },
     data:  { status: 'expired' },
   })
 
-  // Генерируем недостающие заказы (ждём, чтобы вернуть актуальный список)
   await generateOrdersForBrewery(breweryId)
 
   const orders = await (prisma as any).marketOrder.findMany({
@@ -108,7 +164,6 @@ export async function getOrders(breweryId: bigint) {
   })
 
   const demandMults = getDemandMultipliers()
-
   return orders.map(serializeOrder.bind(null, demandMults))
 }
 
@@ -333,6 +388,7 @@ function checkOrderConstraints(batch: any, order: any): string[] {
 function serializeOrder(demandMults: Record<string, number>, o: any) {
   const styleKey   = o.required_style_key
   const demandMult = styleKey ? (demandMults[styleKey] ?? 1.0) : 1.0
+  const isStarter  = o.deadline_at === null && o.customer_name === STARTER_ORDER.customerName
   return {
     id:           o.id.toString(),
     customerName: o.customer_name,
@@ -346,5 +402,6 @@ function serializeOrder(demandMults: Record<string, number>, o: any) {
       : null,
     demandMult:   Math.round(demandMult * 100) / 100,
     trend:        demandMult >= 1.2 ? 'up' : demandMult <= 0.85 ? 'down' : 'neutral',
+    isStarter,
   }
 }

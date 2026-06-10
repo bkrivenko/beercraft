@@ -420,6 +420,25 @@ export async function completeStage(
         },
       })
 
+      // При переходе на 2й уровень — закрываем стартовый заказ (если не выполнен)
+      if (xpResult.leveledUp && user.level < 2 && xpResult.newLevel >= 2) {
+        const brewery = await prisma.brewery.findUnique({
+          where:  { owner_id: user.id },
+          select: { id: true },
+        })
+        if (brewery) {
+          await (prisma as any).marketOrder.updateMany({
+            where: {
+              brewery_id:    brewery.id,
+              status:        'open',
+              deadline_at:   null,
+              customer_name: '🍺 Паб «Первое пиво»',
+            },
+            data: { status: 'expired' },
+          })
+        }
+      }
+
       // Логируем левел-апы (для уведомлений в будущем)
       if (xpResult.leveledUp) {
         console.log(
