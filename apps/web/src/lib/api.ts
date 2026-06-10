@@ -54,6 +54,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ accuracy }),
     }),
+  accelerateBatch: (id: string) =>
+    request<{ ok: boolean; lepreLeft: number }>(`/api/v1/batches/${id}/accelerate`, { method: 'POST' }),
 
   // Профиль / прогрессия
   getStats: () => request<PlayerStats>('/api/v1/me/stats'),
@@ -181,7 +183,7 @@ export interface Progression {
 
 export interface PlayerStats {
   displayName: string; level: number; xp: number
-  softCurrency: number; reputation: number; createdAt: string; breweryName: string | null
+  softCurrency: number; premiumCurrency: number; reputation: number; createdAt: string; breweryName: string | null
   progression: Progression
   stats: { brewsTotal: number; soldBatches: number; avgQuality: number | null; totalIncome: number }
   topBatches: Array<{ quality: number; styleName: string; abv: number | null; ibu: number | null }>

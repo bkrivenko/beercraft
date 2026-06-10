@@ -22,7 +22,7 @@ export async function giveStarterPack(userId: bigint, breweryId: bigint): Promis
   // Ставим флаг сразу (до выдачи) — защита от двойной выдачи при гонке
   await (prisma as any).user.update({
     where: { id: userId },
-    data:  { starter_pack_given: true, soft_currency: { increment: STARTER_COINS } },
+    data:  { starter_pack_given: true, soft_currency: { increment: STARTER_COINS }, premium_currency: { increment: 2 } },
   })
 
   // Ингредиенты

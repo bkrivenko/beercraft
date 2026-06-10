@@ -112,6 +112,104 @@ function NextUnlocks({ unlocks }: { unlocks: NonNullable<PlayerStats['nextLevelU
   )
 }
 
+// ── Блок Лепреконцев ──────────────────────────────────────────────────────────
+function LepreBlock({ count }: { count: number }) {
+  const [showModal, setShowModal] = useState(false)
+
+  return (
+    <>
+      <div className="bg-gradient-to-br from-emerald-950 to-green-950 border border-emerald-700/60 rounded-xl p-4 space-y-3">
+        {/* Заголовок */}
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🍀</span>
+          <div>
+            <p className="text-emerald-300 font-black text-sm uppercase tracking-wider">Лепреконцы</p>
+            <p className="text-emerald-400/60 text-xs">Премиум-валюта</p>
+          </div>
+        </div>
+
+        {/* Монетки */}
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5">
+            {Array.from({ length: Math.min(count, 10) }).map((_, i) => (
+              <span key={i} className="text-2xl drop-shadow-[0_0_6px_rgba(52,211,153,0.6)]">🟢</span>
+            ))}
+            {count > 10 && <span className="text-emerald-300 text-sm font-bold self-end">+{count - 10}</span>}
+            {count === 0 && <span className="text-emerald-400/40 text-sm">Нет лепреконцев</span>}
+          </div>
+          <div className="flex-1 text-right">
+            <span className="text-emerald-200 font-black text-3xl">{count}</span>
+            <span className="text-emerald-400 text-sm ml-1">🍀</span>
+          </div>
+        </div>
+
+        {/* Как использовать */}
+        <div className="bg-emerald-900/30 rounded-lg px-3 py-2 space-y-1">
+          <p className="text-emerald-300 text-xs font-semibold">Применение:</p>
+          <p className="text-emerald-400/70 text-xs">⚡ Ускорить варку пива — 1 🍀</p>
+          <p className="text-emerald-400/70 text-xs">🔓 Разблокировать редкие рецепты — скоро</p>
+          <p className="text-emerald-400/70 text-xs">✨ Особый декор пивоварни — скоро</p>
+        </div>
+
+        {/* Кнопка получить */}
+        <button
+          onClick={() => setShowModal(true)}
+          className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm active:opacity-80 flex items-center justify-center gap-2"
+        >
+          <span>🍀</span> Получить лепреконцев
+        </button>
+      </div>
+
+      {/* Попап "в разработке" */}
+      {showModal && (
+        <>
+          <div className="fixed inset-0 bg-black/70 z-40" onClick={() => setShowModal(false)} />
+          <div className="fixed bottom-0 left-0 right-0 bg-brown-900 border-t border-emerald-700/40 rounded-t-2xl z-50 pb-8 pt-5 px-5">
+            <div className="w-10 h-1 bg-brown-700 rounded-full mx-auto mb-5" />
+
+            <div className="text-center space-y-4">
+              <div className="text-6xl">🍀</div>
+              <h3 className="text-cream-100 font-black text-xl">Получить лепреконцев</h3>
+
+              <div className="bg-emerald-950/60 border border-emerald-700/40 rounded-xl px-4 py-4 space-y-3 text-left">
+                <p className="text-emerald-300 text-sm font-semibold text-center">
+                  ✨ Скоро здесь появится:
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { icon: '🎁', text: 'Ежедневные задания за лепреконцев' },
+                    { icon: '🏆', text: 'Награды за топ в рейтинге' },
+                    { icon: '📦', text: 'Наборы лепреконцев в магазине' },
+                    { icon: '🤝', text: 'Бонус за приглашённых друзей' },
+                  ].map(({ icon, text }) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <span className="text-xl">{icon}</span>
+                      <p className="text-emerald-200/80 text-sm">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-amber-900/20 border border-amber-700/30 rounded-xl px-4 py-3">
+                <p className="text-amber-300 text-xs text-center">
+                  🔨 Функционал в разработке. Следи за обновлениями!
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-2xl text-base active:opacity-80"
+              >
+                Понятно!
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
 // ── Главный экран Э-8 ─────────────────────────────────────────────────────────
 export function ProfileScreen({ onBack }: { onBack?: () => void }) {
   const { displayName } = useTelegram()
@@ -121,10 +219,11 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState<string | null>(null)
   const [coins,     setCoins]     = useState(0)
+  const [lepre,     setLepre]     = useState(0)
 
   useEffect(() => {
     Promise.all([api.getStats(), api.getInventory()])
-      .then(([s, inv]) => { setStats(s); setInventory(inv.items); setCoins(s.softCurrency) })
+      .then(([s, inv]) => { setStats(s); setInventory(inv.items); setCoins(s.softCurrency); setLepre(s.premiumCurrency) })
       .catch((e) => {
         const msg = e instanceof Error ? e.message : String(e)
         const status = (e as any).status
@@ -317,6 +416,9 @@ export function ProfileScreen({ onBack }: { onBack?: () => void }) {
                 <span className="text-cream-100 font-bold">{stats.reputation} ⭐</span>
               </div>
             </div>
+
+            {/* Лепреконцы */}
+            <LepreBlock count={lepre} />
 
             {/* Настройки */}
             <div className="bg-brown-900 border border-brown-800 rounded-xl divide-y divide-brown-800">

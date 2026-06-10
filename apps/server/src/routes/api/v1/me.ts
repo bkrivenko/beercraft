@@ -41,7 +41,7 @@ export async function meRoutes(app: FastifyInstance) {
         where:  { telegram_id: BigInt(request.telegramUser.id) },
         select: {
           id: true, display_name: true, level: true, xp: true,
-          soft_currency: true, reputation: true, created_at: true,
+          soft_currency: true, premium_currency: true, reputation: true, created_at: true,
           brewery: { select: { id: true, name: true } },
         },
       })
@@ -79,8 +79,9 @@ export async function meRoutes(app: FastifyInstance) {
         displayName:    user.display_name,
         level:          user.level,
         xp:             user.xp,
-        softCurrency:   user.soft_currency,
-        reputation:     user.reputation,
+        softCurrency:    user.soft_currency,
+        premiumCurrency: user.premium_currency,
+        reputation:      user.reputation,
         createdAt:      user.created_at,
         breweryName:    user.brewery?.name ?? null,
         progression,

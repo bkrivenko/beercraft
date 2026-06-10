@@ -155,6 +155,52 @@ export async function batchRoutes(app: FastifyInstance) {
     },
   )
 
+  // ── POST /api/v1/batches/:id/accelerate ───────────────────────────────────
+  // Ускорить варку за 1 лепреконец → статус сразу → ready
+  app.post<{ Params: { id: string } }>(
+    '/batches/:id/accelerate',
+    async (request, reply) => {
+      const user = await prisma.user.findUnique({
+        where:  { telegram_id: BigInt(request.telegramUser.id) },
+        select: { id: true, premium_currency: true, brewery: { select: { id: true } } },
+      })
+      if (!user?.brewery) return reply.code(404).send({ error: 'Brewery not found' })
+      if (user.premium_currency < 1)
+        return reply.code(409).send({ error: 'NOT_ENOUGH_LEPRE', message: 'Недостаточно лепреконцев' })
+
+      const batchId = BigInt(request.params.id)
+      const batch = await prisma.batch.findFirst({
+        where: { id: batchId, brewery_id: user.brewery.id },
+        select: { id: true, status: true, quality: true },
+      })
+      if (!batch) return reply.code(404).send({ error: 'Batch not found' })
+      if (['ready', 'sold', 'discarded'].includes(batch.status))
+        return reply.code(409).send({ error: 'INVALID_STATUS', message: 'Варка уже завершена' })
+
+      // Списываем лепреконец и переводим партию в ready
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: user.id },
+          data:  { premium_currency: { decrement: 1 } },
+        }),
+        prisma.batch.update({
+          where: { id: batchId },
+          data:  {
+            status:   'ready',
+            ready_at: new Date(),
+            quality:  batch.quality ?? 75,
+          },
+        }),
+      ])
+
+      const updated = await prisma.user.findUnique({
+        where:  { id: user.id },
+        select: { premium_currency: true },
+      })
+      return reply.send({ ok: true, lepreLeft: updated?.premium_currency ?? 0 })
+    },
+  )
+
   // ── POST /api/v1/batches/rescue ────────────────────────────────────────────
   // Форсирует продвижение застрявших партий (mashing/boiling → fermenting)
   app.post('/batches/rescue', async (request, reply) => {

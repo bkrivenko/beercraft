@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTelegram } from '../telegram/useTelegram'
 import { BeerCard } from '../components/BeerCard'
 import { useProfile, useBatches } from '../lib/useApi'
-import { api } from '../lib/api'
+import { api, ApiError } from '../lib/api'
 import type { Batch, MarketOrder } from '../lib/api'
 
 // ── Скелетон-заглушка ─────────────────────────────────────────────────────────
@@ -165,6 +165,95 @@ function OrderSheet({
   )
 }
 
+// ── Попап ускорения варки ─────────────────────────────────────────────────────
+function AccelerateModal({
+  batch,
+  lepreCount,
+  onConfirm,
+  onClose,
+}: {
+  batch: Batch
+  lepreCount: number
+  onConfirm: () => Promise<void>
+  onClose: () => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
+
+  const handle = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      await onConfirm()
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : String(e)
+      setError(msg.includes('NOT_ENOUGH') ? 'Недостаточно лепреконцев 🍀' : msg)
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/70 z-40" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 bg-brown-900 border-t border-emerald-700/40 rounded-t-2xl z-50 pb-8 pt-5 px-5">
+        <div className="w-10 h-1 bg-brown-700 rounded-full mx-auto mb-5" />
+
+        <div className="space-y-4">
+          {/* Иконка и заголовок */}
+          <div className="text-center space-y-2">
+            <div className="text-5xl">⚡</div>
+            <h3 className="text-cream-100 font-black text-xl">Ускорить варку?</h3>
+            <p className="text-cream-200 text-sm opacity-70">
+              {batch.styleName ?? 'Партия'} мгновенно перейдёт в статус «Готово»
+            </p>
+          </div>
+
+          {/* Стоимость */}
+          <div className="bg-emerald-950/60 border border-emerald-700/40 rounded-xl px-4 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-emerald-300 text-sm font-semibold">Стоимость ускорения</p>
+              <p className="text-emerald-400/70 text-xs mt-0.5">Партия завершится с текущим качеством</p>
+            </div>
+            <div className="text-right">
+              <p className="text-emerald-200 font-black text-2xl">1 🍀</p>
+              <p className="text-emerald-400/60 text-xs">у вас: {lepreCount}</p>
+            </div>
+          </div>
+
+          {lepreCount < 1 && (
+            <div className="bg-red-950/60 border border-red-700/40 rounded-xl px-4 py-3 text-center">
+              <p className="text-red-300 text-sm">Недостаточно лепреконцев</p>
+              <p className="text-red-400/60 text-xs mt-1">Получи их в разделе Профиль → Лепреконцы</p>
+            </div>
+          )}
+
+          {error && (
+            <p className="text-red-400 text-sm text-center">{error}</p>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              className="flex-1 border border-brown-700 text-cream-200 font-bold py-3.5 rounded-2xl text-sm active:opacity-70"
+              onClick={onClose}
+            >Отмена</button>
+            <button
+              disabled={lepreCount < 1 || loading}
+              className={`flex-1 font-bold py-3.5 rounded-2xl text-sm ${
+                lepreCount >= 1 && !loading
+                  ? 'bg-emerald-600 text-white active:opacity-80'
+                  : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
+              }`}
+              onClick={handle}
+            >
+              {loading ? '⏳ Ускоряем…' : '⚡ Ускорить — 1 🍀'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ── Список заказов ────────────────────────────────────────────────────────────
 function OrdersSection({ onBrew }: { onBrew: (styleKey: string) => void }) {
   const [orders,  setOrders]  = useState<MarketOrder[]>([])
@@ -245,7 +334,22 @@ export function HomeScreen({
 }) {
   const { displayName } = useTelegram()
   const { profile, loading: profileLoading } = useProfile()
-  const { batches, loading: batchesLoading } = useBatches(10_000)
+  const { batches, loading: batchesLoading, reload: refetchBatches } = useBatches(10_000)
+  const [accelBatch, setAccelBatch] = useState<Batch | null>(null)
+  const [lepre,      setLepre]      = useState<number | null>(null)
+
+  // Подгружаем количество лепреконцев
+  useEffect(() => {
+    api.getMe().then(me => setLepre(me.premiumCurrency)).catch(() => {})
+  }, [])
+
+  const handleAccelerate = useCallback(async () => {
+    if (!accelBatch) return
+    const res = await api.accelerateBatch(accelBatch.id)
+    setLepre(res.lepreLeft)
+    setAccelBatch(null)
+    refetchBatches?.()
+  }, [accelBatch, refetchBatches])
 
   const readyBatches  = batches.filter((b) => b.status === 'ready')
   const activeBatches = batches.filter((b) => b.status !== 'ready' && b.status !== 'sold')
@@ -269,11 +373,12 @@ export function HomeScreen({
             {[0,1,2].map((i) => <Skeleton key={i} className="h-16" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {[
               { label: 'Монеты',    value: (profile?.softCurrency ?? 0).toLocaleString('ru'), icon: '🪙' },
-              { label: 'Репутация', value: String(profile?.reputation ?? 0),                  icon: '⭐' },
+              { label: 'Реп.',      value: String(profile?.reputation ?? 0),                  icon: '⭐' },
               { label: 'Уровень',   value: String(profile?.level ?? 1),                        icon: '🏆' },
+              { label: 'Лепреконцы',value: lepre !== null ? String(lepre) : '…',              icon: '🍀' },
             ].map(({ label, value, icon }) => (
               <div key={label} className="bg-brown-800 rounded-xl p-2.5 text-center">
                 <div className="text-lg">{icon}</div>
@@ -328,19 +433,26 @@ export function HomeScreen({
         ) : (
           <div data-tutorial="batch-cards" className="grid grid-cols-2 gap-3">
             {activeBatches.map((b) => (
-              <BeerCard
-                key={b.id}
-                id={b.id}
-                name={b.styleName ?? `Партия ${b.id.slice(-4)}`}
-                styleName={b.styleName}
-                styleKey={(b as any).styleKey ?? null}
-                ibu={b.ibu}
-                abv={b.abv}
-                quality={b.quality}
-                srm={b.srm}
-                status={b.status}
-                readyAt={b.readyAt}
-              />
+              <div key={b.id} className="flex flex-col gap-1.5">
+                <BeerCard
+                  id={b.id}
+                  name={b.styleName ?? `Партия ${b.id.slice(-4)}`}
+                  styleName={b.styleName}
+                  styleKey={(b as any).styleKey ?? null}
+                  ibu={b.ibu}
+                  abv={b.abv}
+                  quality={b.quality}
+                  srm={b.srm}
+                  status={b.status}
+                  readyAt={b.readyAt}
+                />
+                <button
+                  className="w-full bg-emerald-900/60 border border-emerald-700/50 text-emerald-300 text-xs font-bold py-2 rounded-xl active:opacity-70 flex items-center justify-center gap-1.5"
+                  onClick={() => setAccelBatch(b)}
+                >
+                  ⚡ Ускорить <span className="text-emerald-400/70">— 1 🍀</span>
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -353,6 +465,16 @@ export function HomeScreen({
         </h2>
         <OrdersSection onBrew={(styleKey) => onBrew?.(styleKey)} />
       </section>
+
+      {/* Попап ускорения */}
+      {accelBatch && (
+        <AccelerateModal
+          batch={accelBatch}
+          lepreCount={lepre ?? 0}
+          onConfirm={handleAccelerate}
+          onClose={() => setAccelBatch(null)}
+        />
+      )}
 
       {/* Кнопка варки */}
       <div className="fixed bottom-16 left-0 right-0 px-4 pb-3 pt-4 bg-gradient-to-t from-brown-950 via-brown-950/90 to-transparent">
