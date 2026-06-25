@@ -2,9 +2,8 @@ import { prisma } from '../db/client.js'
 
 // ── Каталог ингредиентов (по уровню игрока) ───────────────────────────────────
 
-export async function getIngredientsCatalog(playerLevel: number) {
+export async function getIngredientsCatalog(_playerLevel: number) {
   const ingredients = await prisma.ingredient.findMany({
-    where: { unlock_level: { lte: playerLevel } },
     orderBy: [{ type: 'asc' }, { unlock_level: 'asc' }],
   })
 

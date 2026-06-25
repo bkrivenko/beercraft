@@ -347,6 +347,7 @@ function ShopTab() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [inventory,   setInventory]   = useState<InventoryItem[]>([])
   const [coins,       setCoins]       = useState<number | null>(null)
+  const [userLevel,   setUserLevel]   = useState(1)
   const [loading,     setLoading]     = useState(true)
   const [buying,      setBuying]      = useState<string | null>(null)
   const [toast,       setToast]       = useState<string | null>(null)
@@ -365,6 +366,7 @@ function ShopTab() {
       setIngredients(ing.items)
       setInventory(inv.items)
       setCoins(me.softCurrency)
+      setUserLevel(me.level ?? 1)
     } catch (e) {
       showToast(`❌ ${e instanceof Error ? e.message : 'Ошибка загрузки'}`)
     } finally {
@@ -469,60 +471,89 @@ function ShopTab() {
       )}
 
       {/* Каталог по типам */}
-      {Object.entries(grouped).map(([type, items]) => (
-        <div key={type}>
-          <h3 className="text-cream-200 text-xs font-semibold uppercase tracking-wider mb-2">
-            {TYPE_ICON[type]} {TYPE_LABEL[type] ?? type}
-          </h3>
-          <div className="space-y-2">
-            {items.map(ing => {
-              const stock = stockMap[ing.key] ?? 0
-              const amount = qty[ing.key] ?? 1
-              const img = getIngredientImage(ing.type, ing.key)
-              return (
-                <div key={ing.key} className="bg-brown-900 border border-brown-800 rounded-xl overflow-hidden">
-                  {img && (
-                    <img src={img} alt={ing.name} className="w-full h-24 object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
-                  )}
-                  <div className="px-4 py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-cream-100 font-semibold text-sm">{ing.name}</p>
-                      <p className="text-amber-400 text-xs mt-0.5">{ing.basePrice} 🪙 / {ing.unit}</p>
-                      {stock > 0 && (
-                        <p className="text-hop-400 text-xs mt-0.5">На складе: {stock} {ing.unit}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Количество */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          className="w-7 h-7 bg-brown-800 text-cream-100 rounded-lg text-sm active:opacity-70"
-                          onClick={() => setQty(q => ({ ...q, [ing.key]: Math.max(1, (q[ing.key] ?? 1) - 1) }))}
-                        >−</button>
-                        <span className="text-cream-100 text-sm w-5 text-center">{amount}</span>
-                        <button
-                          className="w-7 h-7 bg-brown-800 text-cream-100 rounded-lg text-sm active:opacity-70"
-                          onClick={() => setQty(q => ({ ...q, [ing.key]: (q[ing.key] ?? 1) + 1 }))}
-                        >+</button>
+      {Object.entries(grouped).map(([type, items]) => {
+        const available = items.filter(i => i.unlockLevel <= userLevel)
+        const locked    = items.filter(i => i.unlockLevel >  userLevel)
+        return (
+          <div key={type}>
+            <h3 className="text-cream-200 text-xs font-semibold uppercase tracking-wider mb-2">
+              {TYPE_ICON[type]} {TYPE_LABEL[type] ?? type}
+            </h3>
+            <div className="space-y-2">
+              {/* Доступные к покупке */}
+              {available.map(ing => {
+                const stock  = stockMap[ing.key] ?? 0
+                const amount = qty[ing.key] ?? 1
+                const img    = getIngredientImage(ing.type, ing.key)
+                return (
+                  <div key={ing.key} className="bg-brown-900 border border-brown-800 rounded-xl overflow-hidden">
+                    {img && (
+                      <img src={img} alt={ing.name} className="w-full h-24 object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+                    )}
+                    <div className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-cream-100 font-semibold text-sm">{ing.name}</p>
+                          <p className="text-amber-400 text-xs mt-0.5">{ing.basePrice} 🪙 / {ing.unit}</p>
+                          {stock > 0 && (
+                            <p className="text-hop-400 text-xs mt-0.5">На складе: {stock} {ing.unit}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1">
+                            <button
+                              className="w-7 h-7 bg-brown-800 text-cream-100 rounded-lg text-sm active:opacity-70"
+                              onClick={() => setQty(q => ({ ...q, [ing.key]: Math.max(1, (q[ing.key] ?? 1) - 1) }))}
+                            >−</button>
+                            <span className="text-cream-100 text-sm w-5 text-center">{amount}</span>
+                            <button
+                              className="w-7 h-7 bg-brown-800 text-cream-100 rounded-lg text-sm active:opacity-70"
+                              onClick={() => setQty(q => ({ ...q, [ing.key]: (q[ing.key] ?? 1) + 1 }))}
+                            >+</button>
+                          </div>
+                          <button
+                            disabled={buying === ing.key || (coins != null && coins < ing.basePrice * amount)}
+                            className="bg-amber-600 text-brown-950 text-xs font-bold px-3 py-2 rounded-lg active:opacity-80 disabled:opacity-40"
+                            onClick={() => handleBuy(ing.key, ing.basePrice)}
+                          >
+                            {buying === ing.key ? '⏳' : 'Купить'}
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        disabled={buying === ing.key || (coins != null && coins < ing.basePrice * amount)}
-                        className="bg-amber-600 text-brown-950 text-xs font-bold px-3 py-2 rounded-lg active:opacity-80 disabled:opacity-40"
-                        onClick={() => handleBuy(ing.key, ing.basePrice)}
-                      >
-                        {buying === ing.key ? '⏳' : 'Купить'}
-                      </button>
                     </div>
                   </div>
+                )
+              })}
+
+              {/* Заблокированные — под замком */}
+              {locked.map(ing => {
+                const img = getIngredientImage(ing.type, ing.key)
+                return (
+                  <div key={ing.key} className="bg-brown-900/50 border border-brown-800/50 rounded-xl overflow-hidden opacity-60">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      {img ? (
+                        <img src={img} alt={ing.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 grayscale"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      ) : (
+                        <span className="text-xl flex-shrink-0">{TYPE_ICON[type] ?? '📦'}</span>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-cream-200 text-sm font-semibold truncate">{ing.name}</p>
+                        <p className="text-cream-200 text-xs opacity-60">{ing.basePrice} 🪙 / {ing.unit}</p>
+                      </div>
+                      <div className="flex-shrink-0 bg-brown-800 border border-brown-700 rounded-lg px-3 py-2 text-center">
+                        <p className="text-lg leading-none">🔒</p>
+                        <p className="text-cream-200 text-xs opacity-60 mt-0.5">ур. {ing.unlockLevel}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
 
       {ingredients.length === 0 && !loading && (
         <div className="text-center py-8">
