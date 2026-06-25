@@ -27,6 +27,7 @@ const app = Fastify({ logger: true })
 await app.register(fastifyCors, {
   origin: process.env.CORS_ORIGIN ?? '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-telegram-init-data'],
 })
 await app.register(fastifyWebsocket)
 
