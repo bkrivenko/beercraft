@@ -193,11 +193,17 @@ export default function App() {
   }
 
   if (showOnboarding === null) {
+    const tgInitData = window.Telegram?.WebApp?.initData
+    const apiUrl = import.meta.env.VITE_API_URL ?? '(relative)'
     return (
       <div className="min-h-screen bg-brown-950 flex items-center justify-center">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-3 px-6">
           <div className="text-5xl animate-bounce">🍺</div>
           <p className="text-cream-200 text-sm opacity-60 animate-pulse">Загрузка...</p>
+          <div className="text-left text-xs text-cream-200 opacity-40 mt-4 space-y-1 font-mono">
+            <p>tg: {tgInitData ? `ok (${tgInitData.length} chars)` : 'EMPTY'}</p>
+            <p>api: {apiUrl}</p>
+          </div>
         </div>
       </div>
     )
