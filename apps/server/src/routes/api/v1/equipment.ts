@@ -156,10 +156,11 @@ export async function equipmentRoutes(app: FastifyInstance) {
         }),
         ...(cfg.buyPrice > 0 ? [(prisma as any).transaction.create({
           data: {
-            user_id: user.id,
-            type:    'purchase',
-            amount:  -cfg.buyPrice,
-            note:    `Покупка: ${cfg.name}`,
+            user_id:  user.id,
+            type:     'purchase_equipment',
+            currency: 'soft',
+            amount:   cfg.buyPrice,
+            reason:   `Покупка: ${cfg.name}`,
           },
         })] : []),
       ])
@@ -211,10 +212,11 @@ export async function equipmentRoutes(app: FastifyInstance) {
         }),
         (prisma as any).transaction.create({
           data: {
-            user_id: user.id,
-            type:    'purchase',
-            amount:  -upgradePrice,
-            note:    `Улучшение: ${cfg.name} до ур. ${equip.level + 1}`,
+            user_id:  user.id,
+            type:     'purchase_equipment',
+            currency: 'soft',
+            amount:   upgradePrice,
+            reason:   `Улучшение: ${cfg.name} до ур. ${equip.level + 1}`,
           },
         }),
       ])
