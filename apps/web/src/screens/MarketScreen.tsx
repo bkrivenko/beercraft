@@ -358,6 +358,11 @@ function ShopTab() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      const initData = window.Telegram?.WebApp?.initData
+      if (!initData) {
+        showToast('❌ Telegram не инициализирован, попробуй позже')
+        return
+      }
       const [ing, inv, me] = await Promise.all([
         api.getIngredients(),
         api.getInventory(),
