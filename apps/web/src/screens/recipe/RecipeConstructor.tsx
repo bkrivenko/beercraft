@@ -560,7 +560,7 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
   const [ownedRecipes,  setOwnedRecipes]  = useState<Set<string>>(new Set(['pale_ale']))
   const [dataLoading,   setDataLoading]   = useState(true)
 
-  useEffect(() => {
+  const loadInventory = useCallback(() => {
     Promise.all([api.getInventory(), api.getOwnedRecipes()])
       .then(([inv, owned]: [any, any]) => {
         const stock: Record<string, number> = {}
@@ -571,6 +571,14 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
       .catch(() => { /* показываем всё если ошибка */ })
       .finally(() => setDataLoading(false))
   }, [])
+
+  // Загрузка при маунте и при возврате на вкладку (актуальный склад)
+  useEffect(() => {
+    loadInventory()
+    const onFocus = () => loadInventory()
+    document.addEventListener('visibilitychange', onFocus)
+    return () => document.removeEventListener('visibilitychange', onFocus)
+  }, [loadInventory])
 
   // Рецепт
   const [malts,        setMalts]        = useState<MaltEntry[]>([])

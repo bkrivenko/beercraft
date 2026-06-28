@@ -151,13 +151,22 @@ export async function startBatch(
     }
   }
 
+  // Проверяем дрожжи на складе
+  const yeastIng = await prisma.ingredient.findUnique({ where: { key: yeastKey } })
+  if (!yeastIng) throw new BatchError(`Дрожжи не найдены: ${yeastKey}`, 'INGREDIENT_NOT_FOUND')
+  const yeastInventory = await prisma.inventory.findUnique({
+    where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: yeastIng.id } },
+    select: { quantity: true },
+  })
+  if (!yeastInventory || Number(yeastInventory.quantity) < 1) {
+    throw new BatchError(`Недостаточно дрожжей на складе: нужно 1 шт, есть ${Number(yeastInventory?.quantity ?? 0)}`, 'INSUFFICIENT_STOCK')
+  }
+
   // Ищем стиль
   const beerStyle = targetStyleKey
     ? await prisma.beerStyle.findUnique({ where: { key: targetStyleKey } })
     : null
 
-  // Ищем/создаём рецепт
-  const yeastIng = await prisma.ingredient.findUnique({ where: { key: yeastKey } })
   const waterIng = await prisma.ingredient.findUnique({ where: { key: waterKey } })
 
   // Проверяем лимит активных варок
@@ -197,19 +206,11 @@ export async function startBatch(
       })
     }
 
-    // Списываем дрожжи (1 pitch = 1 единица)
-    if (yeastIng) {
-      const yeastInventory = await tx.inventory.findUnique({
-        where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: yeastIng.id } },
-        select: { quantity: true },
-      })
-      if (yeastInventory && Number(yeastInventory.quantity) >= 1) {
-        await tx.inventory.update({
-          where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: yeastIng.id } },
-          data: { quantity: { decrement: 1 } },
-        })
-      }
-    }
+    // Списываем дрожжи (1 pitch = 1 единица; наличие уже проверено выше)
+    await tx.inventory.update({
+      where: { brewery_id_ingredient_id: { brewery_id: breweryId, ingredient_id: yeastIng.id } },
+      data: { quantity: { decrement: 1 } },
+    })
 
     // Создаём/находим рецепт (snapshot рецепта)
     // Имя уникально по [author_id, name, version] — добавляем timestamp чтобы не дублировать
