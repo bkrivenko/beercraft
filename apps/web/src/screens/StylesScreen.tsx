@@ -2,7 +2,7 @@
  * Экран «Рецепты» — мои рецепты + магазин рецептов + каталог стилей
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { srmToHex } from '../lib/brewCalc'
 import { getBeerImage } from '../components/BeerCard'
 import { api, type OwnedRecipe, type RecipeShopItem } from '../lib/api'
