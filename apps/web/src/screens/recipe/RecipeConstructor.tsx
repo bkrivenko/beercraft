@@ -628,8 +628,9 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
     ? { og: targetStyle.og, fg: targetStyle.fg, abv: targetStyle.abv, ibu: targetStyle.ibu, srm: targetStyle.srm }
     : undefined
 
-  // Подставляем рецепт при выборе стиля
+  // Подставляем рецепт при выборе стиля — только после загрузки стоков
   useEffect(() => {
+    if (dataLoading) return
     const recipe = targetStyleKey ? STYLE_RECIPES[targetStyleKey] : null
     if (!recipe) return
     setMalts(recipe.malts.map(m => {
@@ -640,8 +641,9 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
       const ing = HOPS.find(i => i.key === h.key)
       return { key: h.key, name: h.name, alphaFraction: (ing?.params.alpha as number) ?? 0.06, amountG: h.amountG, timing: h.timing as HopTiming }
     }))
+    // Дрожжи — только если есть на складе, иначе оставляем текущие
     const yeast = YEASTS.find(y => y.key === recipe.yeastKey)
-    if (yeast) {
+    if (yeast && (stockMap[yeast.key] ?? 0) > 0) {
       setYeastKey(yeast.key)
       setYeastAtt((yeast.params.attenuation as number) ?? 0.77)
       setYeastTempMin((yeast.params.temp_min as number) ?? 15)
@@ -650,9 +652,23 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
     setWaterKey(recipe.waterKey)
     setMashTempC(recipe.mashTempC)
     setFermentTempC(recipe.fermentTempC)
-  }, [targetStyleKey])
+  }, [targetStyleKey, dataLoading]) // stockMap намеренно не в deps — заполняем один раз после загрузки
 
-  const canBrew = (malts.length > 0 && hops.length > 0) || (!!targetStyleKey && !!STYLE_RECIPES[targetStyleKey])
+  // canBrew: кнопка активна если есть рецепт (стиль или ручной) — проверка стоков при клике
+  const canBrew = useMemo(() => {
+    const hasCurated = !!targetStyleKey && !!STYLE_RECIPES[targetStyleKey]
+    const hasManual  = malts.length > 0 && hops.length > 0
+    if (!hasCurated && !hasManual) return false
+    // Для ручного рецепта — все ингредиенты должны быть в наличии
+    if (!hasCurated) {
+      const maltOk  = malts.every(m => (stockMap[m.key] ?? 0) >= m.amountKg)
+      const hopOk   = hops.every(h => (stockMap[h.key] ?? 0) * 100 >= h.amountG)
+      const yeastOk = (stockMap[yeastKey] ?? 0) >= 1
+      return maltOk && hopOk && yeastOk
+    }
+    // Для curated рецепта — кнопка всегда активна, проверка при клике → missing modal
+    return true
+  }, [targetStyleKey, malts, hops, yeastKey, stockMap])
 
   // ── Проверка ингредиентов перед варкой ────────────────────────────────────
   const [missingItems,     setMissingItems]     = useState<MissingItem[]>([])
@@ -812,16 +828,18 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
             ✨ Оптимальный рецепт применится автоматически
           </p>
         )}
-        {!canBrew && !targetStyleKey && (
+        {!canBrew && (
           <p className="text-cream-200 text-xs opacity-50 text-center mb-2">
-            Добавь солод и хмель или выбери стиль пива
+            {malts.length === 0 || hops.length === 0
+              ? 'Добавь солод и хмель или выбери стиль пива'
+              : 'Не хватает ингредиентов на складе'}
           </p>
         )}
         <button
           data-tutorial="brew-button"
-          disabled={(!canBrew && !targetStyleKey) || brewing}
+          disabled={!canBrew || brewing}
           className={`w-full font-bold py-3.5 rounded-2xl text-base transition-colors ${
-            (canBrew || targetStyleKey) && !brewing
+            canBrew && !brewing
               ? 'bg-amber-600 text-brown-950 active:opacity-80'
               : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
           }`}
