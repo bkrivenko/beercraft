@@ -370,10 +370,11 @@ export function HomeScreen({
   const [lepre,      setLepre]      = useState<number | null>(null)
 
   // Запоминаем что пользователь варил хотя бы раз
-  const hasBrewed = localStorage.getItem('beercraft_has_brewed') === 'true'
+  const [hasBrewed, setHasBrewed] = useState(() => localStorage.getItem('beercraft_has_brewed') === 'true')
   useEffect(() => {
     if (batches.length > 0 && !hasBrewed) {
       localStorage.setItem('beercraft_has_brewed', 'true')
+      setHasBrewed(true)
     }
   }, [batches.length, hasBrewed])
 
@@ -417,7 +418,7 @@ export function HomeScreen({
               { label: 'Монеты',    value: (profile?.softCurrency ?? 0).toLocaleString('ru'), icon: '🪙' },
               { label: 'Реп.',      value: String(profile?.reputation ?? 0),                  icon: '⭐' },
               { label: 'Уровень',   value: String(profile?.level ?? 1),                        icon: '🏆' },
-              { label: 'Лепреконцы',value: lepre !== null ? String(lepre) : '…',              icon: '🍀' },
+              { label: 'Леприк.',   value: lepre !== null ? String(lepre) : '…',              icon: '🍀' },
             ].map(({ label, value, icon }) => (
               <div key={label} className="bg-brown-800 rounded-xl p-2.5 text-center">
                 <div className="text-lg">{icon}</div>
