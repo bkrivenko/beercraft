@@ -628,7 +628,31 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
     ? { og: targetStyle.og, fg: targetStyle.fg, abv: targetStyle.abv, ibu: targetStyle.ibu, srm: targetStyle.srm }
     : undefined
 
-  const canBrew = malts.length > 0 && hops.length > 0
+  // Подставляем рецепт при выборе стиля
+  useEffect(() => {
+    const recipe = targetStyleKey ? STYLE_RECIPES[targetStyleKey] : null
+    if (!recipe) return
+    setMalts(recipe.malts.map(m => {
+      const ing = MALTS.find(i => i.key === m.key)
+      return { key: m.key, name: m.name, ppkg: (ing?.params.ppkg as number) ?? 300, colorL: (ing?.params.color_l as number) ?? 3, amountKg: m.amountKg }
+    }))
+    setHops(recipe.hops.map(h => {
+      const ing = HOPS.find(i => i.key === h.key)
+      return { key: h.key, name: h.name, alphaFraction: (ing?.params.alpha as number) ?? 0.06, amountG: h.amountG, timing: h.timing as HopTiming }
+    }))
+    const yeast = YEASTS.find(y => y.key === recipe.yeastKey)
+    if (yeast) {
+      setYeastKey(yeast.key)
+      setYeastAtt((yeast.params.attenuation as number) ?? 0.77)
+      setYeastTempMin((yeast.params.temp_min as number) ?? 15)
+      setYeastTempMax((yeast.params.temp_max as number) ?? 24)
+    }
+    setWaterKey(recipe.waterKey)
+    setMashTempC(recipe.mashTempC)
+    setFermentTempC(recipe.fermentTempC)
+  }, [targetStyleKey])
+
+  const canBrew = (malts.length > 0 && hops.length > 0) || (!!targetStyleKey && !!STYLE_RECIPES[targetStyleKey])
 
   // ── Проверка ингредиентов перед варкой ────────────────────────────────────
   const [missingItems,     setMissingItems]     = useState<MissingItem[]>([])
