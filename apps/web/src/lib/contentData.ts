@@ -43,7 +43,7 @@ export const MALTS: IngredientData[] = [
   { key: 'chocolate',  type: 'malt', name: 'Chocolate Malt',        params: { ppkg: 200, color_l: 350, profile: 'шоколад, кофе' },            base_price: 18, unit: 'kg', unlock_level: 2 },
   { key: 'roasted',    type: 'malt', name: 'Roasted Barley',        params: { ppkg: 180, color_l: 500, profile: 'жжёный, кофейный' },         base_price: 15, unit: 'kg', unlock_level: 2 },
   { key: 'crystal80',  type: 'malt', name: 'Crystal 80',            params: { ppkg: 240, color_l: 80, profile: 'карамель, изюм' },            base_price: 14, unit: 'kg', unlock_level: 2 },
-  { key: 'flaked_oats',type: 'malt', name: 'Flaked Oats',           params: { ppkg: 260, color_l: 1,  profile: 'кремовый, тело' },            base_price: 12, unit: 'kg', unlock_level: 4 },
+  { key: 'flaked_oats',type: 'malt', name: 'Flaked Oats',           params: { ppkg: 260, color_l: 1,  profile: 'кремовый, тело' },            base_price: 12, unit: 'kg', unlock_level: 3 },
 ]
 
 // Хмели
