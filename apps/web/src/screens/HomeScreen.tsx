@@ -369,6 +369,14 @@ export function HomeScreen({
   const [accelBatch, setAccelBatch] = useState<Batch | null>(null)
   const [lepre,      setLepre]      = useState<number | null>(null)
 
+  // Запоминаем что пользователь варил хотя бы раз
+  const hasBrewed = localStorage.getItem('beercraft_has_brewed') === 'true'
+  useEffect(() => {
+    if (batches.length > 0 && !hasBrewed) {
+      localStorage.setItem('beercraft_has_brewed', 'true')
+    }
+  }, [batches.length, hasBrewed])
+
   // Подгружаем количество лепреконцев
   useEffect(() => {
     api.getMe().then(me => setLepre(me.premiumCurrency)).catch(() => {})
@@ -450,7 +458,7 @@ export function HomeScreen({
           <div className="grid grid-cols-2 gap-3">
             {[0,1].map((i) => <Skeleton key={i} className="h-48" />)}
           </div>
-        ) : batches.length === 0 ? (
+        ) : batches.length === 0 && !hasBrewed ? (
           <EmptyBatches onBrew={() => onBrew?.()} />
         ) : activeBatches.length === 0 ? (
           <div className="flex flex-col items-center py-6 space-y-2">
