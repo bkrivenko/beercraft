@@ -662,81 +662,73 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
     setFermentTempC(recipe.fermentTempC)
   }, [targetStyleKey, dataLoading]) // stockMap намеренно не в deps — заполняем один раз после загрузки
 
-  // canBrew: кнопка активна если есть рецепт (стиль или ручной) — проверка стоков при клике
-  const canBrew = useMemo(() => {
-    const hasCurated = !!targetStyleKey && !!STYLE_RECIPES[targetStyleKey]
-    const hasManual  = malts.length > 0 && hops.length > 0
-    if (!hasCurated && !hasManual) return false
-    // Для ручного рецепта — все ингредиенты должны быть в наличии
-    if (!hasCurated) {
-      const maltOk  = malts.every(m => (stockMap[m.key] ?? 0) >= m.amountKg)
-      const hopOk   = hops.every(h => (stockMap[h.key] ?? 0) * 100 >= h.amountG)
-      const yeastOk = (stockMap[yeastKey] ?? 0) >= 1
-      return maltOk && hopOk && yeastOk
-    }
-    // Для curated рецепта — кнопка всегда активна, проверка при клике → missing modal
-    return true
-  }, [targetStyleKey, malts, hops, yeastKey, stockMap])
-
-  // ── Проверка ингредиентов перед варкой ────────────────────────────────────
-  const [missingItems,     setMissingItems]     = useState<MissingItem[]>([])
-  const [showMissingModal, setShowMissingModal] = useState(false)
-
-  const handleBrewClick = useCallback(() => {
-    if (!canBrew || brewing) return
-
-    const curatedRecipe = targetStyleKey ? STYLE_RECIPES[targetStyleKey] : null
-
-    if (curatedRecipe) {
-      // Проверяем наличие ингредиентов из эталонного рецепта
+  // Вычисляем нехватающие ингредиенты для текущего рецепта
+  const missingForRecipe = useMemo((): MissingItem[] => {
+    const recipe = targetStyleKey ? STYLE_RECIPES[targetStyleKey] : null
+    if (recipe) {
       const missing: MissingItem[] = []
-
-      // Солод
-      for (const m of curatedRecipe.malts) {
+      for (const m of recipe.malts) {
         const have = stockMap[m.key] ?? 0
-        if (have < m.amountKg) {
-          missing.push({ key: m.key, name: m.name, need: m.amountKg, have, unit: 'кг', icon: '🌾' })
-        }
+        if (have < m.amountKg) missing.push({ key: m.key, name: m.name, need: m.amountKg, have, unit: 'кг', icon: '🌾' })
       }
-
-      // Хмель (суммируем по ключу)
       const hopNeeds: Record<string, { name: string; totalG: number }> = {}
-      for (const h of curatedRecipe.hops) {
+      for (const h of recipe.hops) {
         if (!hopNeeds[h.key]) hopNeeds[h.key] = { name: h.name, totalG: 0 }
         hopNeeds[h.key].totalG += h.amountG
       }
       for (const [key, { name, totalG }] of Object.entries(hopNeeds)) {
-        const haveG = (stockMap[key] ?? 0) * 100   // единица = 100 г
-        if (haveG < totalG) {
-          missing.push({ key, name, need: totalG, have: haveG, unit: 'г', icon: '🌿' })
-        }
+        const haveG = (stockMap[key] ?? 0) * 100
+        if (haveG < totalG) missing.push({ key, name, need: totalG, have: haveG, unit: 'г', icon: '🌿' })
       }
-
-      // Дрожжи
-      if ((stockMap[curatedRecipe.yeastKey] ?? 0) < 1) {
-        const yeast = YEASTS.find(y => y.key === curatedRecipe.yeastKey)
-        missing.push({ key: curatedRecipe.yeastKey, name: yeast?.name ?? curatedRecipe.yeastKey, need: 1, have: 0, unit: 'шт', icon: '🧫' })
+      if ((stockMap[recipe.yeastKey] ?? 0) < 1) {
+        const yeast = YEASTS.find(y => y.key === recipe.yeastKey)
+        missing.push({ key: recipe.yeastKey, name: yeast?.name ?? recipe.yeastKey, need: 1, have: stockMap[recipe.yeastKey] ?? 0, unit: 'шт', icon: '🧫' })
       }
+      return missing
+    }
+    // Ручной рецепт
+    if (malts.length === 0 || hops.length === 0) return []
+    const missing: MissingItem[] = []
+    for (const m of malts) {
+      const have = stockMap[m.key] ?? 0
+      if (have < m.amountKg) missing.push({ key: m.key, name: m.name, need: m.amountKg, have, unit: 'кг', icon: '🌾' })
+    }
+    for (const h of hops) {
+      const haveG = (stockMap[h.key] ?? 0) * 100
+      if (haveG < h.amountG) missing.push({ key: h.key, name: h.name, need: h.amountG, have: haveG, unit: 'г', icon: '🌿' })
+    }
+    if ((stockMap[yeastKey] ?? 0) < 1) {
+      const yeast = YEASTS.find(y => y.key === yeastKey)
+      missing.push({ key: yeastKey, name: yeast?.name ?? yeastKey, need: 1, have: stockMap[yeastKey] ?? 0, unit: 'шт', icon: '🧫' })
+    }
+    return missing
+  }, [targetStyleKey, stockMap, malts, hops, yeastKey])
 
-      if (missing.length > 0) {
-        setMissingItems(missing)
-        setShowMissingModal(true)
-        return
-      }
+  const hasRecipe = (!!targetStyleKey && !!STYLE_RECIPES[targetStyleKey]) || (malts.length > 0 && hops.length > 0)
+  const canBrew   = hasRecipe && missingForRecipe.length === 0 && !dataLoading
 
-      // Всё есть — применяем оптимальный рецепт и варим
-      const optimalMalts: MaltEntry[] = curatedRecipe.malts.map(m => {
-        const ing = MALTS.find(i => i.key === m.key)!
-        return { key: m.key, name: m.name, ppkg: ing?.params.ppkg as number ?? 300, colorL: ing?.params.color_l as number ?? 3, amountKg: m.amountKg }
-      })
-      const optimalHops: HopEntry[] = curatedRecipe.hops.map(h => {
-        const ing = HOPS.find(i => i.key === h.key)!
-        return { key: h.key, name: h.name, alphaFraction: ing?.params.alpha as number ?? 0.06, amountG: h.amountG, timing: h.timing as HopTiming }
-      })
+  // ── Проверка ингредиентов перед варкой ────────────────────────────────────
+  const [showMissingModal, setShowMissingModal] = useState(false)
 
+  const handleBrewClick = useCallback(() => {
+    if (brewing) return
+    if (missingForRecipe.length > 0) {
+      setShowMissingModal(true)
+      return
+    }
+    if (!canBrew) return
+
+    const curatedRecipe = targetStyleKey ? STYLE_RECIPES[targetStyleKey] : null
+    if (curatedRecipe) {
       onBrew?.({
-        malts: optimalMalts,
-        hops:  optimalHops,
+        malts: curatedRecipe.malts.map(m => {
+          const ing = MALTS.find(i => i.key === m.key)!
+          return { key: m.key, name: m.name, ppkg: (ing?.params.ppkg as number) ?? 300, colorL: (ing?.params.color_l as number) ?? 3, amountKg: m.amountKg }
+        }),
+        hops: curatedRecipe.hops.map(h => {
+          const ing = HOPS.find(i => i.key === h.key)!
+          return { key: h.key, name: h.name, alphaFraction: (ing?.params.alpha as number) ?? 0.06, amountG: h.amountG, timing: h.timing as HopTiming }
+        }),
         yeastKey:     curatedRecipe.yeastKey,
         waterKey:     curatedRecipe.waterKey,
         mashTempC:    curatedRecipe.mashTempC,
@@ -745,10 +737,9 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
         targetStyleKey,
       })
     } else {
-      // Свободный стиль — просто варим с текущими ингредиентами
       onBrew?.({ malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, targetStyleKey: undefined })
     }
-  }, [canBrew, brewing, targetStyleKey, stockMap, malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, onBrew])
+  }, [brewing, canBrew, missingForRecipe, targetStyleKey, malts, hops, yeastKey, waterKey, mashTempC, fermentTempC, volumeL, onBrew])
 
   return (
     <div className="min-h-screen bg-brown-950 flex flex-col">
@@ -836,31 +827,38 @@ export function RecipeConstructor({ onBrew, onBack, onGoMarket, brewing = false,
             ✨ Оптимальный рецепт применится автоматически
           </p>
         )}
-        {!canBrew && (
+        {!hasRecipe && (
           <p className="text-cream-200 text-xs opacity-50 text-center mb-2">
-            {malts.length === 0 || hops.length === 0
-              ? 'Добавь солод и хмель или выбери стиль пива'
-              : 'Не хватает ингредиентов на складе'}
+            Добавь солод и хмель или выбери стиль пива
+          </p>
+        )}
+        {hasRecipe && missingForRecipe.length > 0 && (
+          <p className="text-amber-400 text-xs text-center mb-2">
+            Не хватает {missingForRecipe.length} ингред. — нажми для деталей
           </p>
         )}
         <button
           data-tutorial="brew-button"
-          disabled={!canBrew || brewing}
+          disabled={(!hasRecipe && missingForRecipe.length === 0) || brewing}
           className={`w-full font-bold py-3.5 rounded-2xl text-base transition-colors ${
-            canBrew && !brewing
-              ? 'bg-amber-600 text-brown-950 active:opacity-80'
-              : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
+            brewing
+              ? 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
+              : canBrew
+                ? 'bg-amber-600 text-brown-950 active:opacity-80'
+                : hasRecipe && missingForRecipe.length > 0
+                  ? 'bg-amber-900 text-amber-300 border border-amber-700 active:opacity-80'
+                  : 'bg-brown-800 text-cream-200 opacity-50 cursor-not-allowed'
           }`}
           onClick={handleBrewClick}
         >
-          {brewing ? '⏳ Запуск…' : '🍺 Варить'}
+          {brewing ? '⏳ Запуск…' : canBrew ? '🍺 Варить' : missingForRecipe.length > 0 ? '🛒 Нет ингредиентов' : '🍺 Варить'}
         </button>
       </div>
 
       {/* Модальное окно — не хватает ингредиентов */}
       {showMissingModal && (
         <MissingIngredientsModal
-          items={missingItems}
+          items={missingForRecipe}
           onClose={() => setShowMissingModal(false)}
           onGoMarket={() => { setShowMissingModal(false); onGoMarket?.() }}
         />
