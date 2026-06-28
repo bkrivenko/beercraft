@@ -61,12 +61,19 @@ export const HOPS: IngredientData[] = [
 
 // Дрожжи
 export const YEASTS: IngredientData[] = [
-  { key: 'us05',       type: 'yeast', name: 'US-05 American Ale',    params: { attenuation: 0.77, temp_min: 15, temp_max: 24, profile: 'чистый, нейтральный' },   base_price: 90,  unit: 'pitch', unlock_level: 1 },
-  { key: 'wlp001',     type: 'yeast', name: 'WLP001 California Ale', params: { attenuation: 0.76, temp_min: 18, temp_max: 23, profile: 'чистый, лёгкая фруктовость' }, base_price: 110, unit: 'pitch', unlock_level: 2 },
-  { key: 'wb06',       type: 'yeast', name: 'WB-06 Weizen',          params: { attenuation: 0.74, temp_min: 18, temp_max: 24, profile: 'банан, гвоздика' },         base_price: 95,  unit: 'pitch', unlock_level: 2 },
-  { key: 's23',        type: 'yeast', name: 'S-23 Lager',            params: { attenuation: 0.78, temp_min: 8,  temp_max: 14, profile: 'чистый, свежий' },          base_price: 95,  unit: 'pitch', unlock_level: 3 },
-  { key: 'notty',      type: 'yeast', name: 'Nottingham Ale',        params: { attenuation: 0.80, temp_min: 14, temp_max: 21, profile: 'нейтральный, сухой' },      base_price: 85,  unit: 'pitch', unlock_level: 1 },
-  { key: 'wlp530',     type: 'yeast', name: 'WLP530 Abbey Ale',      params: { attenuation: 0.77, temp_min: 18, temp_max: 26, profile: 'фруктовый, пряный' },       base_price: 120, unit: 'pitch', unlock_level: 4 },
+  { key: 'us05',           type: 'yeast', name: 'US-05 American Ale',       params: { attenuation: 0.77, temp_min: 15, temp_max: 24, profile: 'чистый, нейтральный' },          base_price: 90,  unit: 'pitch', unlock_level: 1 },
+  { key: 'notty',          type: 'yeast', name: 'Nottingham Ale',           params: { attenuation: 0.80, temp_min: 14, temp_max: 21, profile: 'нейтральный, сухой' },           base_price: 85,  unit: 'pitch', unlock_level: 1 },
+  { key: 'wb06',           type: 'yeast', name: 'WB-06 Weizen',             params: { attenuation: 0.74, temp_min: 18, temp_max: 24, profile: 'банан, гвоздика' },              base_price: 95,  unit: 'pitch', unlock_level: 2 },
+  { key: 'wheat_german',   type: 'yeast', name: 'Bavarian Wheat',           params: { attenuation: 0.76, temp_min: 18, temp_max: 22, profile: 'банан, гвоздика' },              base_price: 90,  unit: 'pitch', unlock_level: 2 },
+  { key: 'wlp001',         type: 'yeast', name: 'WLP001 California Ale',    params: { attenuation: 0.76, temp_min: 18, temp_max: 23, profile: 'чистый, лёгкая фруктовость' },   base_price: 110, unit: 'pitch', unlock_level: 2 },
+  { key: 's23',            type: 'yeast', name: 'S-23 Lager',               params: { attenuation: 0.78, temp_min: 8,  temp_max: 14, profile: 'чистый, свежий' },              base_price: 95,  unit: 'pitch', unlock_level: 3 },
+  { key: 'german_lager',   type: 'yeast', name: 'German Lager (34/70)',     params: { attenuation: 0.75, temp_min: 9,  temp_max: 13, profile: 'чистый, отточенный' },           base_price: 70,  unit: 'pitch', unlock_level: 3 },
+  { key: 'wlp530',         type: 'yeast', name: 'WLP530 Abbey Ale',         params: { attenuation: 0.77, temp_min: 18, temp_max: 26, profile: 'фруктовый, пряный' },            base_price: 120, unit: 'pitch', unlock_level: 4 },
+  { key: 'english_ale',    type: 'yeast', name: 'English Ale',              params: { attenuation: 0.72, temp_min: 18, temp_max: 22, profile: 'мягко-фруктовый, солодовый' },   base_price: 55,  unit: 'pitch', unlock_level: 5 },
+  { key: 'irish_ale',      type: 'yeast', name: 'Irish Ale',                params: { attenuation: 0.73, temp_min: 17, temp_max: 22, profile: 'чистый, лёгкая фруктовость' },   base_price: 55,  unit: 'pitch', unlock_level: 7 },
+  { key: 'belgian_wit',    type: 'yeast', name: 'Belgian Witbier',          params: { attenuation: 0.75, temp_min: 18, temp_max: 24, profile: 'пряный, цитрусовый' },           base_price: 90,  unit: 'pitch', unlock_level: 9 },
+  { key: 'belgian_saison', type: 'yeast', name: 'Belgian Saison',           params: { attenuation: 0.84, temp_min: 20, temp_max: 30, profile: 'перечный, фруктовый, сухой' },   base_price: 110, unit: 'pitch', unlock_level: 10 },
+  { key: 'belgian_abbey',  type: 'yeast', name: 'Belgian Abbey/Tripel',     params: { attenuation: 0.80, temp_min: 18, temp_max: 24, profile: 'фрукты, специи, эфирный' },      base_price: 110, unit: 'pitch', unlock_level: 12 },
 ]
 
 // Профили воды
@@ -262,6 +269,97 @@ export const STYLE_RECIPES: Record<string, StyleRecipe> = {
     mashTempC: 67, fermentTempC: 10,
     notes: 'Октябрьское пиво. Munich даёт насыщенный солодовый хлебный вкус.',
   },
+  american_ipa: {
+    malts: [
+      { key: 'pale_2row', name: 'Pale Ale (2-row)',   amountKg: 4.5, role: 'основа' },
+      { key: 'crystal40', name: 'Caramel/Crystal 40', amountKg: 0.4, role: 'тело, карамель' },
+      { key: 'munich',    name: 'Munich',              amountKg: 0.3, role: 'солодовость' },
+    ],
+    hops: [
+      { key: 'magnum',     name: 'Magnum',     amountG: 30, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'centennial', name: 'Centennial', amountG: 25, timing: 'flavor',    role: '🌿 цветочный' },
+      { key: 'citra',      name: 'Citra',      amountG: 30, timing: 'aroma',     role: '🌸 тропики' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'hoppy', waterName: 'Хмелевая (сульфатная)',
+    mashTempC: 66, fermentTempC: 19,
+    notes: 'Классический американский IPA: яркая горечь, тропический аромат хмеля.',
+  },
+  german_pils: {
+    malts: [
+      { key: 'pilsner', name: 'Pilsner', amountKg: 4.3, role: 'основа (100%)' },
+    ],
+    hops: [
+      { key: 'saaz',     name: 'Saaz',     amountG: 20, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'saaz',     name: 'Saaz',     amountG: 15, timing: 'flavor',    role: '🌿 пряный' },
+      { key: 'tettnang', name: 'Tettnang', amountG: 15, timing: 'aroma',     role: '🌸 аромат' },
+    ],
+    yeastKey: 'german_lager', yeastName: 'German Lager (34/70)',
+    waterKey: 'soft', waterName: 'Мягкая',
+    mashTempC: 65, fermentTempC: 10,
+    notes: 'Немецкий пилснер: сухое тело, пряный хмель Saaz, холодное брожение.',
+  },
+  brown_ale: {
+    malts: [
+      { key: 'pale_2row', name: 'Pale Ale (2-row)', amountKg: 3.5, role: 'основа' },
+      { key: 'munich',    name: 'Munich',            amountKg: 0.6, role: 'хлебный' },
+      { key: 'crystal60', name: 'Crystal 60',        amountKg: 0.4, role: 'карамель, цвет' },
+    ],
+    hops: [
+      { key: 'ekg',    name: 'East Kent Goldings', amountG: 25, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'fuggle', name: 'Fuggle',              amountG: 15, timing: 'flavor',    role: '🌿 земляной' },
+    ],
+    yeastKey: 'english_ale', yeastName: 'English Ale',
+    waterKey: 'balanced', waterName: 'Сбалансированная',
+    mashTempC: 67, fermentTempC: 20,
+    notes: 'Британский браун: солодовый, орехово-карамельный, мягкая горечь.',
+  },
+  american_porter: {
+    malts: [
+      { key: 'pale_2row', name: 'Pale Ale (2-row)', amountKg: 4.2, role: 'основа' },
+      { key: 'munich',    name: 'Munich',            amountKg: 0.5, role: 'солодовость' },
+      { key: 'crystal60', name: 'Crystal 60',        amountKg: 0.4, role: 'карамель' },
+      { key: 'chocolate', name: 'Chocolate Malt',    amountKg: 0.4, role: 'шоколад, цвет' },
+    ],
+    hops: [
+      { key: 'magnum',  name: 'Magnum',  amountG: 22, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'cascade', name: 'Cascade', amountG: 20, timing: 'flavor',    role: '🌿 аромат' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'malty', waterName: 'Солодовая (хлоридная)',
+    mashTempC: 67, fermentTempC: 19,
+    notes: 'Американский портер: шоколадно-кофейные нотки, хмелевой акцент.',
+  },
+  hazy_ipa: {
+    malts: [
+      { key: 'pale_2row',   name: 'Pale Ale (2-row)', amountKg: 4.5, role: 'основа' },
+      { key: 'flaked_oats', name: 'Flaked Oats',      amountKg: 0.8, role: 'кремовое тело' },
+      { key: 'wheat',       name: 'Wheat Malt',       amountKg: 0.5, role: 'мутность' },
+    ],
+    hops: [
+      { key: 'magnum', name: 'Magnum', amountG: 10, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'citra',  name: 'Citra',  amountG: 40, timing: 'aroma',     role: '🌸 тропики' },
+      { key: 'mosaic', name: 'Mosaic', amountG: 40, timing: 'aroma',     role: '🍓 ягоды' },
+      { key: 'simcoe', name: 'Simcoe', amountG: 30, timing: 'aroma',     role: '🌲 сосна' },
+    ],
+    yeastKey: 'us05', yeastName: 'US-05 American Ale',
+    waterKey: 'malty', waterName: 'Солодовая (хлоридная)',
+    mashTempC: 67, fermentTempC: 20,
+    notes: 'Хейзи IPA: мутное, тропически-ягодное, мягкое. Много сухого хмелевания.',
+  },
+  tripel: {
+    malts: [
+      { key: 'pilsner', name: 'Pilsner', amountKg: 5.5, role: 'основа' },
+    ],
+    hops: [
+      { key: 'saaz',     name: 'Saaz',     amountG: 25, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'tettnang', name: 'Tettnang', amountG: 15, timing: 'flavor',    role: '🌿 пряный' },
+    ],
+    yeastKey: 'belgian_abbey', yeastName: 'Belgian Abbey/Tripel',
+    waterKey: 'soft', waterName: 'Мягкая',
+    mashTempC: 65, fermentTempC: 22,
+    notes: 'Бельгийский трипель: крепкое, сухое, пряно-фруктовое, золотисто-прозрачное.',
+  },
 }
 
 // Стили
@@ -276,6 +374,12 @@ export const BEER_STYLES: StyleData[] = [
   { key: 'saison',     name: 'Saison',              family: 'Эль (бельгийский)',og: [1.048, 1.065],fg: [1.008, 1.014], abv: [4.5, 7.0], ibu: [20, 35],  srm: [5, 14],   bugu_target: [0.4, 0.7], base_price: 110, difficulty: 3, unlock_level: 3 },
   { key: 'brown',      name: 'American Brown Ale',  family: 'Эль (тёмный)',    og: [1.045, 1.060], fg: [1.010, 1.016], abv: [4.3, 6.2], ibu: [20, 30],  srm: [18, 35],  bugu_target: [0.4, 0.7], base_price: 98,  difficulty: 2, unlock_level: 2 },
   { key: 'witbier',    name: 'Witbier',             family: 'Пшеничный',       og: [1.044, 1.052], fg: [1.008, 1.012], abv: [4.5, 5.5], ibu: [10, 20],  srm: [2, 4],    bugu_target: [0.2, 0.5], base_price: 92,  difficulty: 2, unlock_level: 2 },
-  { key: 'marzen',     name: 'Märzen / Oktoberfest',family: 'Лагер',           og: [1.054, 1.060], fg: [1.010, 1.014], abv: [5.8, 6.3], ibu: [18, 24],  srm: [8, 17],   bugu_target: [0.3, 0.5], base_price: 102, difficulty: 3, unlock_level: 3 },
-  { key: 'dry_stout',  name: 'Dry Stout',           family: 'Тёмный',          og: [1.036, 1.050], fg: [1.007, 1.011], abv: [3.8, 5.0], ibu: [30, 45],  srm: [25, 40],  bugu_target: [0.7, 1.1], base_price: 100, difficulty: 2, unlock_level: 2 },
+  { key: 'marzen',          name: 'Märzen / Oktoberfest', family: 'Лагер',                    og: [1.054, 1.060], fg: [1.010, 1.014], abv: [5.8, 6.3], ibu: [18, 24],  srm: [8, 17],   bugu_target: [0.3, 0.5], base_price: 102, difficulty: 3, unlock_level: 3 },
+  { key: 'dry_stout',       name: 'Dry Stout',            family: 'Тёмный',                   og: [1.036, 1.050], fg: [1.007, 1.011], abv: [3.8, 5.0], ibu: [30, 45],  srm: [25, 40],  bugu_target: [0.7, 1.1], base_price: 100, difficulty: 2, unlock_level: 2 },
+  { key: 'american_ipa',    name: 'American IPA',         family: 'Эль (хмелевой)',           og: [1.056, 1.070], fg: [1.008, 1.014], abv: [5.5, 7.5], ibu: [40, 70],  srm: [6, 14],   bugu_target: [0.7, 1.1], base_price: 110, difficulty: 2, unlock_level: 4 },
+  { key: 'german_pils',     name: 'German Pils',          family: 'Лагер',                    og: [1.044, 1.050], fg: [1.008, 1.013], abv: [4.4, 5.2], ibu: [22, 40],  srm: [2, 5],    bugu_target: [0.55, 0.9],base_price: 90,  difficulty: 3, unlock_level: 3 },
+  { key: 'brown_ale',       name: 'British Brown Ale',    family: 'Эль (солодовый)',          og: [1.040, 1.052], fg: [1.008, 1.013], abv: [4.2, 5.4], ibu: [20, 30],  srm: [12, 22],  bugu_target: [0.45, 0.65],base_price: 90, difficulty: 2, unlock_level: 5 },
+  { key: 'american_porter', name: 'American Porter',      family: 'Эль (тёмный)',             og: [1.048, 1.065], fg: [1.012, 1.016], abv: [4.8, 6.5], ibu: [25, 50],  srm: [22, 40],  bugu_target: [0.5, 0.8], base_price: 105, difficulty: 3, unlock_level: 6 },
+  { key: 'hazy_ipa',        name: 'Hazy IPA (NEIPA)',     family: 'Эль (хмелевой)',           og: [1.060, 1.075], fg: [1.010, 1.015], abv: [6.0, 7.5], ibu: [25, 60],  srm: [4, 7],    bugu_target: [0.5, 0.9], base_price: 135, difficulty: 5, unlock_level: 11 },
+  { key: 'tripel',          name: 'Belgian Tripel',       family: 'Бельгийское (крепкое)',    og: [1.075, 1.085], fg: [1.008, 1.014], abv: [7.5, 9.5], ibu: [20, 40],  srm: [4.5, 7],  bugu_target: [0.3, 0.5], base_price: 150, difficulty: 5, unlock_level: 12 },
 ]
