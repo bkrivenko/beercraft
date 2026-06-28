@@ -243,7 +243,7 @@ export default function App() {
         />
       )}
 
-      {screen === 'styles'  && <StylesScreen  onBrew={handleStartBrew} />}
+      {screen === 'styles'  && <StylesScreen  onBrew={handleStartBrew} onGoMarket={() => setScreen('market')} />}
       {screen === 'market'  && <MarketScreen  onBack={() => setScreen('home')} />}
       {screen === 'duel'    && <DuelScreen />}
       {screen === 'profile' && <ProfileScreen onBack={() => setScreen('home')} />}

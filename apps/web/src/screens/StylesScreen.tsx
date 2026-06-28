@@ -2,13 +2,14 @@
  * Экран «Рецепты» — мои рецепты + магазин рецептов + каталог стилей
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { srmToHex } from '../lib/brewCalc'
 import { getBeerImage } from '../components/BeerCard'
 import { api, type OwnedRecipe, type RecipeShopItem } from '../lib/api'
 import {
   BEER_STYLES,
   STYLE_RECIPES,
+  YEASTS,
   type StyleData,
 } from '../lib/contentData'
 
@@ -112,10 +113,61 @@ function StyleCard({
 
 // ── Детальный лист стиля ──────────────────────────────────────────────────────
 
-function StyleSheet({ style, owned, onClose, onBrew }: {
-  style: StyleData; owned: boolean; onClose: () => void; onBrew: (key: string) => void
+interface MissingItem { key: string; name: string; need: number; have: number; unit: string; icon: string }
+
+function MissingModal({ items, onClose, onGoMarket }: { items: MissingItem[]; onClose: () => void; onGoMarket: () => void }) {
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/80 z-60" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 bg-brown-950 rounded-t-2xl z-70 p-5 space-y-4">
+        <h3 className="text-cream-100 font-bold text-base">Не хватает ингредиентов</h3>
+        <div className="space-y-2">
+          {items.map(item => (
+            <div key={item.key} className="flex items-center justify-between bg-brown-900 border border-red-900/60 rounded-xl px-3 py-2.5">
+              <span className="text-cream-100 text-sm">{item.icon} {item.name}</span>
+              <span className="text-red-400 text-xs font-semibold">нужно {item.need} {item.unit}, есть {item.have} {item.unit}</span>
+            </div>
+          ))}
+        </div>
+        <button className="w-full bg-amber-600 text-brown-950 font-bold py-3 rounded-2xl active:opacity-80" onClick={onGoMarket}>
+          🛒 Перейти в магазин
+        </button>
+        <button className="w-full text-cream-200 text-sm opacity-60 py-1" onClick={onClose}>Закрыть</button>
+      </div>
+    </>
+  )
+}
+
+function StyleSheet({ style, owned, stockMap, onClose, onBrew, onGoMarket }: {
+  style: StyleData; owned: boolean; stockMap: Record<string, number>
+  onClose: () => void; onBrew: (key: string) => void; onGoMarket: () => void
 }) {
+  const [missingItems, setMissingItems] = useState<MissingItem[] | null>(null)
   const recipe = STYLE_RECIPES[style.key]
+
+  const checkAndBrew = () => {
+    if (!recipe) { onClose(); onBrew(style.key); return }
+    const missing: MissingItem[] = []
+    for (const m of recipe.malts) {
+      const have = stockMap[m.key] ?? 0
+      if (have < m.amountKg) missing.push({ key: m.key, name: m.name, need: m.amountKg, have, unit: 'кг', icon: '🌾' })
+    }
+    const hopNeeds: Record<string, { name: string; totalG: number }> = {}
+    for (const h of recipe.hops) {
+      if (!hopNeeds[h.key]) hopNeeds[h.key] = { name: h.name, totalG: 0 }
+      hopNeeds[h.key].totalG += h.amountG
+    }
+    for (const [key, { name, totalG }] of Object.entries(hopNeeds)) {
+      const haveG = (stockMap[key] ?? 0) * 100
+      if (haveG < totalG) missing.push({ key, name, need: totalG, have: haveG, unit: 'г', icon: '🌿' })
+    }
+    if ((stockMap[recipe.yeastKey] ?? 0) < 1) {
+      const yeast = YEASTS.find(y => y.key === recipe.yeastKey)
+      missing.push({ key: recipe.yeastKey, name: yeast?.name ?? recipe.yeastKey, need: 1, have: stockMap[recipe.yeastKey] ?? 0, unit: 'шт', icon: '🧫' })
+    }
+    if (missing.length > 0) { setMissingItems(missing); return }
+    onClose(); onBrew(style.key)
+  }
   const color  = style.srm ? srmToHex((style.srm[0] + style.srm[1]) / 2) : '#4e2a0e'
   const imgSrc = getBeerImage(style.key)
 
@@ -236,11 +288,18 @@ function StyleSheet({ style, owned, onClose, onBrew }: {
           {owned && (
             <button
               className="w-full bg-amber-600 text-brown-950 font-bold py-3.5 rounded-2xl text-base shadow-lg active:opacity-80"
-              onClick={() => { onClose(); onBrew(style.key) }}
+              onClick={checkAndBrew}
             >🍺 Варить {style.name}</button>
           )}
         </div>
       </div>
+      {missingItems && (
+        <MissingModal
+          items={missingItems}
+          onClose={() => setMissingItems(null)}
+          onGoMarket={() => { setMissingItems(null); onClose(); onGoMarket() }}
+        />
+      )}
     </>
   )
 }
@@ -249,9 +308,10 @@ function StyleSheet({ style, owned, onClose, onBrew }: {
 
 interface StylesScreenProps {
   onBrew: (styleKey: string) => void
+  onGoMarket?: () => void
 }
 
-export function StylesScreen({ onBrew }: StylesScreenProps) {
+export function StylesScreen({ onBrew, onGoMarket }: StylesScreenProps) {
   const [activeTab,   setActiveTab]   = useState<'mine' | 'shop' | 'all'>('mine')
   const [userLevel,   setUserLevel]   = useState(1)
   const [coins,       setCoins]       = useState(0)
@@ -260,15 +320,19 @@ export function StylesScreen({ onBrew }: StylesScreenProps) {
   const [shopItems,   setShopItems]   = useState<RecipeShopItem[]>([])
   const [selected,    setSelected]    = useState<StyleData | null>(null)
   const [buying,      setBuying]      = useState<string | null>(null)
+  const [stockMap,    setStockMap]    = useState<Record<string, number>>({})
 
   const load = () => {
     setLoading(true)
-    Promise.all([api.getMe(), api.getOwnedRecipes(), api.getRecipeShop()])
-      .then(([me, ownedRes, shopRes]) => {
+    Promise.all([api.getMe(), api.getOwnedRecipes(), api.getRecipeShop(), api.getInventory()])
+      .then(([me, ownedRes, shopRes, inv]: [any, any, any, any]) => {
         setUserLevel(me.level ?? 1)
         setCoins(me.softCurrency ?? 0)
         setOwned(new Set((ownedRes.items as OwnedRecipe[]).map(r => r.styleKey)))
         setShopItems(shopRes.items as RecipeShopItem[])
+        const stock: Record<string, number> = {}
+        for (const item of inv.items) stock[item.key] = item.quantity
+        setStockMap(stock)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -400,8 +464,10 @@ export function StylesScreen({ onBrew }: StylesScreenProps) {
         <StyleSheet
           style={selected}
           owned={owned.has(selected.key)}
+          stockMap={stockMap}
           onClose={() => setSelected(null)}
           onBrew={onBrew}
+          onGoMarket={onGoMarket ?? (() => {})}
         />
       )}
 
