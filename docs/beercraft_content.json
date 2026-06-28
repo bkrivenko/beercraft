@@ -95,7 +95,7 @@
       },
       "base_price": 6,
       "unit": "kg",
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "key": "wheat",
@@ -108,7 +108,7 @@
       },
       "base_price": 7,
       "unit": "kg",
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "key": "munich",
@@ -134,7 +134,7 @@
       },
       "base_price": 11,
       "unit": "kg",
-      "unlock_level": 5
+      "unlock_level": 2
     },
     {
       "key": "chocolate",
@@ -147,7 +147,7 @@
       },
       "base_price": 14,
       "unit": "kg",
-      "unlock_level": 6
+      "unlock_level": 2
     },
     {
       "key": "flaked_barley",
@@ -173,7 +173,7 @@
       },
       "base_price": 14,
       "unit": "kg",
-      "unlock_level": 7
+      "unlock_level": 2
     },
     {
       "key": "vienna",
@@ -385,7 +385,7 @@
       },
       "base_price": 90,
       "unit": "pitch",
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "key": "german_lager",

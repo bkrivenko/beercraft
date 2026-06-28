@@ -37,12 +37,12 @@ export interface WaterProfile {
 export const MALTS: IngredientData[] = [
   { key: 'pale_2row',  type: 'malt', name: 'Pale Ale (2-row)',     params: { ppkg: 305, color_l: 2,   profile: 'хлебный, бисквитный' },    base_price: 6,  unit: 'kg', unlock_level: 1 },
   { key: 'crystal40',  type: 'malt', name: 'Caramel/Crystal 40',   params: { ppkg: 260, color_l: 40,  profile: 'карамель, лёгкая сладость' }, base_price: 11, unit: 'kg', unlock_level: 1 },
-  { key: 'pilsner',    type: 'malt', name: 'Pilsner',               params: { ppkg: 310, color_l: 1.5, profile: 'чистый, зерновой' },         base_price: 6,  unit: 'kg', unlock_level: 2 },
+  { key: 'pilsner',    type: 'malt', name: 'Pilsner',               params: { ppkg: 310, color_l: 1.5, profile: 'чистый, зерновой' },         base_price: 6,  unit: 'kg', unlock_level: 1 },
   { key: 'munich',     type: 'malt', name: 'Munich',                params: { ppkg: 290, color_l: 9,  profile: 'хлебный, солодовый' },        base_price: 9,  unit: 'kg', unlock_level: 2 },
   { key: 'wheat',      type: 'malt', name: 'Wheat Malt',            params: { ppkg: 300, color_l: 2,  profile: 'лёгкий, хлебный' },           base_price: 8,  unit: 'kg', unlock_level: 1 },
-  { key: 'chocolate',  type: 'malt', name: 'Chocolate Malt',        params: { ppkg: 200, color_l: 350, profile: 'шоколад, кофе' },            base_price: 18, unit: 'kg', unlock_level: 3 },
-  { key: 'roasted',    type: 'malt', name: 'Roasted Barley',        params: { ppkg: 180, color_l: 500, profile: 'жжёный, кофейный' },         base_price: 15, unit: 'kg', unlock_level: 3 },
-  { key: 'crystal80',  type: 'malt', name: 'Crystal 80',            params: { ppkg: 240, color_l: 80, profile: 'карамель, изюм' },            base_price: 14, unit: 'kg', unlock_level: 3 },
+  { key: 'chocolate',  type: 'malt', name: 'Chocolate Malt',        params: { ppkg: 200, color_l: 350, profile: 'шоколад, кофе' },            base_price: 18, unit: 'kg', unlock_level: 2 },
+  { key: 'roasted',    type: 'malt', name: 'Roasted Barley',        params: { ppkg: 180, color_l: 500, profile: 'жжёный, кофейный' },         base_price: 15, unit: 'kg', unlock_level: 2 },
+  { key: 'crystal80',  type: 'malt', name: 'Crystal 80',            params: { ppkg: 240, color_l: 80, profile: 'карамель, изюм' },            base_price: 14, unit: 'kg', unlock_level: 2 },
   { key: 'flaked_oats',type: 'malt', name: 'Flaked Oats',           params: { ppkg: 260, color_l: 1,  profile: 'кремовый, тело' },            base_price: 12, unit: 'kg', unlock_level: 4 },
 ]
 
@@ -63,8 +63,8 @@ export const HOPS: IngredientData[] = [
 export const YEASTS: IngredientData[] = [
   { key: 'us05',           type: 'yeast', name: 'US-05 American Ale',       params: { attenuation: 0.77, temp_min: 15, temp_max: 24, profile: 'чистый, нейтральный' },          base_price: 90,  unit: 'pitch', unlock_level: 1 },
   { key: 'notty',          type: 'yeast', name: 'Nottingham Ale',           params: { attenuation: 0.80, temp_min: 14, temp_max: 21, profile: 'нейтральный, сухой' },           base_price: 85,  unit: 'pitch', unlock_level: 1 },
-  { key: 'wb06',           type: 'yeast', name: 'WB-06 Weizen',             params: { attenuation: 0.74, temp_min: 18, temp_max: 24, profile: 'банан, гвоздика' },              base_price: 95,  unit: 'pitch', unlock_level: 2 },
-  { key: 'wheat_german',   type: 'yeast', name: 'Bavarian Wheat',           params: { attenuation: 0.76, temp_min: 18, temp_max: 22, profile: 'банан, гвоздика' },              base_price: 90,  unit: 'pitch', unlock_level: 2 },
+  { key: 'wb06',           type: 'yeast', name: 'WB-06 Weizen',             params: { attenuation: 0.74, temp_min: 18, temp_max: 24, profile: 'банан, гвоздика' },              base_price: 95,  unit: 'pitch', unlock_level: 1 },
+  { key: 'wheat_german',   type: 'yeast', name: 'Bavarian Wheat',           params: { attenuation: 0.76, temp_min: 18, temp_max: 22, profile: 'банан, гвоздика' },              base_price: 90,  unit: 'pitch', unlock_level: 1 },
   { key: 'wlp001',         type: 'yeast', name: 'WLP001 California Ale',    params: { attenuation: 0.76, temp_min: 18, temp_max: 23, profile: 'чистый, лёгкая фруктовость' },   base_price: 110, unit: 'pitch', unlock_level: 2 },
   { key: 's23',            type: 'yeast', name: 'S-23 Lager',               params: { attenuation: 0.78, temp_min: 8,  temp_max: 14, profile: 'чистый, свежий' },              base_price: 95,  unit: 'pitch', unlock_level: 3 },
   { key: 'german_lager',   type: 'yeast', name: 'German Lager (34/70)',     params: { attenuation: 0.75, temp_min: 9,  temp_max: 13, profile: 'чистый, отточенный' },           base_price: 70,  unit: 'pitch', unlock_level: 3 },
@@ -292,7 +292,7 @@ export const STYLE_RECIPES: Record<string, StyleRecipe> = {
     hops: [
       { key: 'saaz',     name: 'Saaz',     amountG: 20, timing: 'bittering', role: '⚡ горечь' },
       { key: 'saaz',     name: 'Saaz',     amountG: 15, timing: 'flavor',    role: '🌿 пряный' },
-      { key: 'tettnang', name: 'Tettnang', amountG: 15, timing: 'aroma',     role: '🌸 аромат' },
+      { key: 'hallertau', name: 'Hallertau', amountG: 15, timing: 'aroma',   role: '🌸 аромат' },
     ],
     yeastKey: 'german_lager', yeastName: 'German Lager (34/70)',
     waterKey: 'soft', waterName: 'Мягкая',
@@ -303,11 +303,11 @@ export const STYLE_RECIPES: Record<string, StyleRecipe> = {
     malts: [
       { key: 'pale_2row', name: 'Pale Ale (2-row)', amountKg: 3.5, role: 'основа' },
       { key: 'munich',    name: 'Munich',            amountKg: 0.6, role: 'хлебный' },
-      { key: 'crystal60', name: 'Crystal 60',        amountKg: 0.4, role: 'карамель, цвет' },
+      { key: 'crystal80', name: 'Crystal 80',        amountKg: 0.4, role: 'карамель, цвет' },
     ],
     hops: [
-      { key: 'ekg',    name: 'East Kent Goldings', amountG: 25, timing: 'bittering', role: '⚡ горечь' },
-      { key: 'fuggle', name: 'Fuggle',              amountG: 15, timing: 'flavor',    role: '🌿 земляной' },
+      { key: 'hallertau', name: 'Hallertau', amountG: 25, timing: 'bittering', role: '⚡ горечь' },
+      { key: 'saaz',      name: 'Saaz',      amountG: 15, timing: 'flavor',    role: '🌿 земляной' },
     ],
     yeastKey: 'english_ale', yeastName: 'English Ale',
     waterKey: 'balanced', waterName: 'Сбалансированная',
@@ -318,7 +318,7 @@ export const STYLE_RECIPES: Record<string, StyleRecipe> = {
     malts: [
       { key: 'pale_2row', name: 'Pale Ale (2-row)', amountKg: 4.2, role: 'основа' },
       { key: 'munich',    name: 'Munich',            amountKg: 0.5, role: 'солодовость' },
-      { key: 'crystal60', name: 'Crystal 60',        amountKg: 0.4, role: 'карамель' },
+      { key: 'crystal80', name: 'Crystal 80',        amountKg: 0.4, role: 'карамель' },
       { key: 'chocolate', name: 'Chocolate Malt',    amountKg: 0.4, role: 'шоколад, цвет' },
     ],
     hops: [
@@ -353,7 +353,7 @@ export const STYLE_RECIPES: Record<string, StyleRecipe> = {
     ],
     hops: [
       { key: 'saaz',     name: 'Saaz',     amountG: 25, timing: 'bittering', role: '⚡ горечь' },
-      { key: 'tettnang', name: 'Tettnang', amountG: 15, timing: 'flavor',    role: '🌿 пряный' },
+      { key: 'hallertau', name: 'Hallertau', amountG: 15, timing: 'flavor',  role: '🌿 пряный' },
     ],
     yeastKey: 'belgian_abbey', yeastName: 'Belgian Abbey/Tripel',
     waterKey: 'soft', waterName: 'Мягкая',

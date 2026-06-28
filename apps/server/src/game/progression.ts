@@ -75,12 +75,13 @@ export const LEVEL_UNLOCKS: LevelUnlock[] = [
 // Ингредиенты открываются в магазине по уровню (без покупки рецепта)
 // Это только для отображения «что откроется следующим»
 export const INGREDIENT_UNLOCKS: Record<number, string[]> = {
-  2:  ['pilsner', 'wheat', 'hallertau', 'wb06', 'soft'],
-  3:  ['chocolate', 'crystal80', 'saaz', 'columbus', 's23'],
-  4:  ['citra', 'simcoe', 'centennial', 'wlp001', 'flaked_oats'],
-  5:  ['munich', 'crystal40', 'notty'],
+  1:  ['pilsner', 'wb06', 'wheat_german'],
+  2:  ['wheat', 'hallertau', 'soft', 'chocolate', 'crystal80', 'roasted'],
+  3:  ['saaz', 'columbus', 's23', 'citra', 'simcoe', 'centennial'],
+  4:  ['wlp001', 'flaked_oats', 'munich', 'crystal40', 'notty'],
+  5:  ['english_ale'],
   6:  ['mosaic', 'wlp530', 'malty'],
-  7:  ['roasted', 'carbonate'],
+  7:  ['irish_ale', 'carbonate'],
   8:  ['vienna'],
 }
 
