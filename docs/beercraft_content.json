@@ -121,7 +121,7 @@
       },
       "base_price": 9,
       "unit": "kg",
-      "unlock_level": 5
+      "unlock_level": 2
     },
     {
       "key": "crystal60",
@@ -251,7 +251,7 @@
       },
       "base_price": 30,
       "unit": "100g",
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "key": "saaz",
@@ -264,7 +264,7 @@
       },
       "base_price": 30,
       "unit": "100g",
-      "unlock_level": 3
+      "unlock_level": 1
     },
     {
       "key": "tettnang",
@@ -290,7 +290,7 @@
       },
       "base_price": 45,
       "unit": "100g",
-      "unlock_level": 4
+      "unlock_level": 2
     },
     {
       "key": "citra",
@@ -303,7 +303,7 @@
       },
       "base_price": 55,
       "unit": "100g",
-      "unlock_level": 4
+      "unlock_level": 2
     },
     {
       "key": "ekg",
@@ -342,7 +342,7 @@
       },
       "base_price": 55,
       "unit": "100g",
-      "unlock_level": 11
+      "unlock_level": 3
     },
     {
       "key": "simcoe",
@@ -355,7 +355,7 @@
       },
       "base_price": 55,
       "unit": "100g",
-      "unlock_level": 11
+      "unlock_level": 2
     },
     {
       "key": "us05",
@@ -598,6 +598,115 @@
       "base_price": 10,
       "unit": "batch",
       "unlock_level": 1
+    },
+    {
+      "key": "roasted",
+      "type": "malt",
+      "name": "Roasted Barley",
+      "params": {
+        "ppkg": 180,
+        "color_l": 500,
+        "profile": "жжёный, кофейный"
+      },
+      "base_price": 15,
+      "unit": "kg",
+      "unlock_level": 2
+    },
+    {
+      "key": "crystal80",
+      "type": "malt",
+      "name": "Crystal 80",
+      "params": {
+        "ppkg": 240,
+        "color_l": 80,
+        "profile": "карамель, изюм"
+      },
+      "base_price": 14,
+      "unit": "kg",
+      "unlock_level": 2
+    },
+    {
+      "key": "columbus",
+      "type": "hop",
+      "name": "Columbus",
+      "params": {
+        "alpha": 0.15,
+        "role": "bittering",
+        "profile": "землистый, острый"
+      },
+      "base_price": 24,
+      "unit": "100g",
+      "unlock_level": 2
+    },
+    {
+      "key": "wb06",
+      "type": "yeast",
+      "name": "WB-06 Weizen",
+      "params": {
+        "attenuation": 0.74,
+        "temp_min": 18,
+        "temp_max": 24,
+        "profile": "банан, гвоздика"
+      },
+      "base_price": 95,
+      "unit": "pitch",
+      "unlock_level": 1
+    },
+    {
+      "key": "notty",
+      "type": "yeast",
+      "name": "Nottingham Ale",
+      "params": {
+        "attenuation": 0.8,
+        "temp_min": 14,
+        "temp_max": 21,
+        "profile": "нейтральный, сухой"
+      },
+      "base_price": 85,
+      "unit": "pitch",
+      "unlock_level": 1
+    },
+    {
+      "key": "wlp001",
+      "type": "yeast",
+      "name": "WLP001 California Ale",
+      "params": {
+        "attenuation": 0.76,
+        "temp_min": 18,
+        "temp_max": 23,
+        "profile": "чистый, лёгкая фруктовость"
+      },
+      "base_price": 110,
+      "unit": "pitch",
+      "unlock_level": 2
+    },
+    {
+      "key": "s23",
+      "type": "yeast",
+      "name": "S-23 Lager",
+      "params": {
+        "attenuation": 0.78,
+        "temp_min": 8,
+        "temp_max": 14,
+        "profile": "чистый, свежий"
+      },
+      "base_price": 95,
+      "unit": "pitch",
+      "unlock_level": 3
+    },
+    {
+      "key": "wlp530",
+      "type": "yeast",
+      "name": "WLP530 Abbey Ale",
+      "params": {
+        "attenuation": 0.77,
+        "temp_min": 18,
+        "temp_max": 26,
+        "profile": "фруктовый, пряный"
+      },
+      "base_price": 120,
+      "unit": "pitch",
+      "unlock_level": 4
     }
   ],
   "water_profiles": [
@@ -783,7 +892,7 @@
       "price_amount": 6,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "kind": "ingredient",
@@ -793,7 +902,7 @@
       "price_amount": 7,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "kind": "ingredient",
@@ -803,7 +912,7 @@
       "price_amount": 9,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 5
+      "unlock_level": 2
     },
     {
       "kind": "ingredient",
@@ -823,7 +932,7 @@
       "price_amount": 14,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 6
+      "unlock_level": 2
     },
     {
       "kind": "ingredient",
@@ -873,7 +982,7 @@
       "price_amount": 8,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 11
+      "unlock_level": 3
     },
     {
       "kind": "ingredient",
@@ -903,7 +1012,7 @@
       "price_amount": 30,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "kind": "ingredient",
@@ -913,7 +1022,7 @@
       "price_amount": 30,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 3
+      "unlock_level": 1
     },
     {
       "kind": "ingredient",
@@ -933,7 +1042,7 @@
       "price_amount": 45,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 4
+      "unlock_level": 2
     },
     {
       "kind": "ingredient",
@@ -943,7 +1052,7 @@
       "price_amount": 55,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 4
+      "unlock_level": 2
     },
     {
       "kind": "ingredient",
@@ -973,7 +1082,7 @@
       "price_amount": 55,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 11
+      "unlock_level": 3
     },
     {
       "kind": "ingredient",
@@ -983,7 +1092,7 @@
       "price_amount": 55,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 11
+      "unlock_level": 2
     },
     {
       "kind": "ingredient",
@@ -1003,7 +1112,7 @@
       "price_amount": 90,
       "enabled": true,
       "feature_flag": null,
-      "unlock_level": 2
+      "unlock_level": 1
     },
     {
       "kind": "ingredient",
@@ -1284,6 +1393,86 @@
       "enabled": false,
       "feature_flag": "monetization",
       "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "roasted",
+      "title": "Roasted Barley",
+      "price_currency": "soft",
+      "price_amount": 15,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "crystal80",
+      "title": "Crystal 80",
+      "price_currency": "soft",
+      "price_amount": 14,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "columbus",
+      "title": "Columbus",
+      "price_currency": "soft",
+      "price_amount": 24,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "wb06",
+      "title": "WB-06 Weizen",
+      "price_currency": "soft",
+      "price_amount": 95,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "notty",
+      "title": "Nottingham Ale",
+      "price_currency": "soft",
+      "price_amount": 85,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 1
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "wlp001",
+      "title": "WLP001 California Ale",
+      "price_currency": "soft",
+      "price_amount": 110,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 2
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "s23",
+      "title": "S-23 Lager",
+      "price_currency": "soft",
+      "price_amount": 95,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 3
+    },
+    {
+      "kind": "ingredient",
+      "ref_key": "wlp530",
+      "title": "WLP530 Abbey Ale",
+      "price_currency": "soft",
+      "price_amount": 120,
+      "enabled": true,
+      "feature_flag": null,
+      "unlock_level": 4
     }
   ],
   "styles": [
